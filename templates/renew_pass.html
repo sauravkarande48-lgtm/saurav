@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+{% block title %}Renew Pass{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>🔄 Renew Bus Pass</h1>
+    <p>Renew your expired pass with updated duration</p>
+</div>
+
+<section class="section">
+    <div class="container">
+        <div class="form-card animate-in" style="max-width: 580px;">
+            <div class="form-card-header">
+                <h2>Renew Pass #{{ bus_pass.id }}</h2>
+                <p>{{ bus_pass.full_name }} — {{ bus_pass.route_from }} → {{ bus_pass.route_to }}</p>
+            </div>
+            <div class="form-card-body">
+                <!-- Existing Pass Info -->
+                <div
+                    style="background: var(--warning-bg); padding: 16px; border-radius: var(--radius); margin-bottom: 24px;">
+                    <div style="font-weight: 600; color: #92400E; margin-bottom: 8px;">⚠️ Expired Pass Details</div>
+                    <div class="pass-detail-row">
+                        <span class="pass-detail-label">Previous Type</span>
+                        <span class="pass-detail-value">
+                            {% if bus_pass.pass_type == 'weekly' %}Weekly{% elif bus_pass.pass_type == 'monthly'
+                            %}Monthly{% elif bus_pass.pass_type == '3months' %}3-Month{% elif bus_pass.pass_type ==
+                            '6months' %}6-Month{% elif bus_pass.pass_type == 'student' %}Student{% elif
+                            bus_pass.pass_type == 'senior' %}Senior Citizen{% else %}{{ bus_pass.pass_type }}{% endif %}
+                        </span>
+                    </div>
+                    <div class="pass-detail-row">
+                        <span class="pass-detail-label">Route</span>
+                        <span class="pass-detail-value">{{ bus_pass.route_from }} → {{ bus_pass.route_to }}</span>
+                    </div>
+                    <div class="pass-detail-row">
+                        <span class="pass-detail-label">Expired On</span>
+                        <span class="pass-detail-value">{{ bus_pass.expiry_date or 'N/A' }}</span>
+                    </div>
+                </div>
+
+                <form method="POST" action="{{ url_for('renew_pass', pass_id=bus_pass.id) }}">
+                    <div class="form-group">
+                        <label for="pass_type">Select New Duration</label>
+                        <select class="form-control" id="pass_type" name="pass_type" required
+                            onchange="updateRenewPrice()">
+                            <option value="weekly">Weekly Pass — ₹150 (7 days)</option>
+                            <option value="monthly">Monthly Pass — ₹500 (30 days)</option>
+                            <option value="3months">3-Month Pass — ₹1,350 (90 days, 10% off)</option>
+                            <option value="6months">6-Month Pass — ₹2,700 (180 days, 10% off)</option>
+                            <option value="student">Student Pass — ₹400 (30 days, ID required)</option>
+                            <option value="senior">Senior Citizen Pass — ₹350 (30 days)</option>
+                        </select>
+                    </div>
+
+                    <div id="renew-price"
+                        style="background: var(--info-bg); padding: 16px; border-radius: var(--radius); margin-bottom: 20px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span style="font-weight: 600; color: var(--text-dark);">Renewal Price:</span>
+                            <span id="renew-price-value"
+                                style="font-size: 1.4rem; font-weight: 800; color: var(--primary);">₹150</span>
+                        </div>
+                        <div id="renew-price-note"
+                            style="font-size: 0.8rem; color: var(--text-muted); margin-top: 6px; display: none;"></div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-lg" style="width: 100%;">Submit Renewal →</button>
+                    <p style="text-align: center; margin-top: 12px; font-size: 0.85rem; color: var(--text-muted);">
+                        A new application will be created. Admin approval required.
+                    </p>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    var renewPrices = null;
+
+    // Fetch distance-adjusted prices on page load using the existing route
+    (function () {
+        var routeFrom = '{{ bus_pass.route_from }}';
+        var routeTo = '{{ bus_pass.route_to }}';
+        fetch('/api/route-price?from=' + encodeURIComponent(routeFrom) + '&to=' + encodeURIComponent(routeTo))
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                renewPrices = data.prices;
+                // Update dropdown labels
+                var opts = document.getElementById('pass_type').options;
+                var labels = {
+                    'weekly': 'Weekly Pass — ₹' + data.prices.weekly.toLocaleString() + ' (7 days)',
+                    'monthly': 'Monthly Pass — ₹' + data.prices.monthly.toLocaleString() + ' (30 days)',
+                    '3months': '3-Month Pass — ₹' + data.prices['3months'].toLocaleString() + ' (90 days)',
+                    '6months': '6-Month Pass — ₹' + data.prices['6months'].toLocaleString() + ' (180 days)',
+                    'student': 'Student Pass — ₹' + data.prices.student.toLocaleString() + ' (30 days)',
+                    'senior': 'Senior Citizen Pass — ₹' + data.prices.senior.toLocaleString() + ' (30 days)'
+                };
+                for (var i = 0; i < opts.length; i++) {
+                    if (labels[opts[i].value]) opts[i].textContent = labels[opts[i].value];
+                }
+                // Show distance note if multiplier != 1.0
+                if (data.multiplier !== 1.0) {
+                    var note = document.getElementById('renew-price-note');
+                    note.style.display = 'block';
+                    note.textContent = '📍 ' + data.category + ' route: ' + routeFrom + ' → ' + routeTo;
+                }
+                updateRenewPrice();
+            });
+    })();
+
+    function updateRenewPrice() {
+        var select = document.getElementById('pass_type');
+        var value = document.getElementById('renew-price-value');
+        var basePrices = { 'weekly': 150, 'monthly': 500, '3months': 1350, '6months': 2700, 'student': 400, 'senior': 350 };
+        var prices = renewPrices || basePrices;
+        value.textContent = '₹' + (prices[select.value] || 150).toLocaleString();
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Server Error{% endblock %}
+
+{% block content %}
+<section class="section" style="min-height: calc(100vh - 200px); display: flex; align-items: center; text-align: center;">
+    <div class="container">
+        <div style="max-width: 480px; margin: 0 auto;">
+            <div style="font-size: 6rem; margin-bottom: 16px; opacity: 0.3;">⚙️</div>
+            <h1 style="font-size: 4rem; font-weight: 900; color: var(--danger); margin-bottom: 8px;">500</h1>
+            <h2 style="font-size: 1.4rem; font-weight: 700; margin-bottom: 12px;">Internal Server Error</h2>
+            <p style="color: var(--text-light); margin-bottom: 32px;">Something went wrong on our end. Please try again later.</p>
+            <a href="{{ url_for('home') }}" class="btn btn-primary btn-lg">← Back to Home</a>
+        </div>
+    </div>
+</section>
+{% endblock %}

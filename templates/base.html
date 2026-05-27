@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Smart Bus Pass Management System – Apply, manage, and renew your bus passes digitally.">
+    <title>{% block title %}Smart Bus Pass{% endblock %} | Bus Pass System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    {% block head %}{% endblock %}
+</head>
+<body>
+
+    <!-- ===== NAVBAR ===== -->
+    <nav class="navbar" id="navbar">
+        <div class="navbar-inner">
+            <a href="{{ url_for('home') }}" class="navbar-brand">
+                <div class="brand-icon"><span>🚌</span></div>
+                BusPass
+            </a>
+
+            <button class="navbar-toggle" id="nav-toggle" aria-label="Toggle navigation">
+                <span>☰</span>
+            </button>
+
+            <ul class="navbar-links" id="nav-links">
+                <li><a href="{{ url_for('home') }}" class="{% if request.endpoint == 'home' %}active{% endif %}">Home</a></li>
+                <li><a href="{{ url_for('about') }}" class="{% if request.endpoint == 'about' %}active{% endif %}">About</a></li>
+                <li><a href="{{ url_for('services') }}" class="{% if request.endpoint == 'services' %}active{% endif %}">Services</a></li>
+                <li><a href="{{ url_for('help_page') }}" class="{% if request.endpoint == 'help_page' %}active{% endif %}">Help</a></li>
+                <li><a href="{{ url_for('contact') }}" class="{% if request.endpoint == 'contact' %}active{% endif %}">Contact</a></li>
+
+                {% if current_user %}
+                    {% if current_user.role == 'admin' %}
+                        <li><a href="{{ url_for('admin_dashboard') }}" class="{% if request.endpoint == 'admin_dashboard' %}active{% endif %}">Admin</a></li>
+                    {% else %}
+                        <li><a href="{{ url_for('dashboard') }}" class="{% if request.endpoint == 'dashboard' %}active{% endif %}">Dashboard</a></li>
+                    {% endif %}
+                    <li><a href="{{ url_for('logout') }}" class="btn-nav">Logout</a></li>
+                {% else %}
+                    <li><a href="{{ url_for('login') }}" class="{% if request.endpoint == 'login' %}active{% endif %}">Login</a></li>
+                    <li><a href="{{ url_for('register') }}" class="btn-nav">Register</a></li>
+                {% endif %}
+            </ul>
+        </div>
+    </nav>
+
+    <!-- ===== FLASH MESSAGES ===== -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="flash-container" id="flash-container">
+        {% for category, message in messages %}
+        <div class="flash-message {{ category }}">
+            {% if category == 'success' %}✓{% elif category == 'danger' %}✕{% elif category == 'warning' %}⚠{% else %}ℹ{% endif %}
+            <span>{{ message }}</span>
+            <button class="flash-close" aria-label="Close">&times;</button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
+
+    <!-- ===== MAIN CONTENT ===== -->
+    <main id="main-content">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- ===== FOOTER ===== -->
+    <footer class="footer">
+        <div class="footer-inner">
+            <div class="footer-section">
+                <div class="footer-brand">
+                    <div class="brand-icon"><span>🚌</span></div>
+                    BusPass
+                </div>
+                <p>Smart Bus Pass Management System — Your digital solution for hassle-free bus pass management. Apply, pay, and travel with ease.</p>
+            </div>
+            <div class="footer-section">
+                <h4>Quick Links</h4>
+                <ul class="footer-links">
+                    <li><a href="{{ url_for('home') }}">Home</a></li>
+                    <li><a href="{{ url_for('about') }}">About Us</a></li>
+                    <li><a href="{{ url_for('services') }}">Services</a></li>
+                    <li><a href="{{ url_for('contact') }}">Contact</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h4>Services</h4>
+                <ul class="footer-links">
+                    <li><a href="{{ url_for('services') }}">Weekly Pass</a></li>
+                    <li><a href="{{ url_for('services') }}">Monthly Pass</a></li>
+                    <li><a href="{{ url_for('services') }}">3-Month Pass</a></li>
+                    <li><a href="{{ url_for('services') }}">Student Pass</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h4>Support</h4>
+                <ul class="footer-links">
+                    <li><a href="{{ url_for('help_page') }}">Help Center</a></li>
+                    <li><a href="{{ url_for('contact') }}">Contact Us</a></li>
+                    {% if current_user %}
+                    <li><a href="{{ url_for('support') }}">Support Ticket</a></li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            &copy; 2026 Smart Bus Pass Management System. All rights reserved.
+        </div>
+    </footer>
+
+    <!-- Custom Confirmation Modal -->
+    <div id="confirmModalOverlay" class="modal-overlay">
+        <div class="custom-modal" id="confirmModal">
+            <div class="modal-header">
+                <div class="modal-icon" id="modalIcon">❓</div>
+                <h2 class="modal-title" id="modalTitle">Confirm Action</h2>
+            </div>
+            <div class="modal-body">
+                <p id="modalMessage">Are you sure you want to proceed?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline" onclick="closeConfirmModal()" style="color: var(--text-dark); border-color: var(--border);">Cancel</button>
+                <a id="modalConfirmBtn" href="#" class="btn">Proceed</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global listener for custom confirmation modals
+        document.addEventListener('click', function(e) {
+            const trigger = e.target.closest('[data-confirm]');
+            if (!trigger) return;
+
+            e.preventDefault();
+            
+            const options = {
+                title: trigger.getAttribute('data-confirm-title') || 'Confirm Action',
+                message: trigger.getAttribute('data-confirm-message') || 'Are you sure?',
+                icon: trigger.getAttribute('data-confirm-icon') || '❓',
+                confirmUrl: trigger.getAttribute('data-confirm-url') || trigger.href || '#',
+                confirmText: trigger.getAttribute('data-confirm-text') || 'Confirm',
+                theme: trigger.getAttribute('data-confirm-theme') || 'success'
+            };
+
+            const overlay = document.getElementById('confirmModalOverlay');
+            const modal = document.getElementById('confirmModal');
+            const title = document.getElementById('modalTitle');
+            const message = document.getElementById('modalMessage');
+            const icon = document.getElementById('modalIcon');
+            const confirmBtn = document.getElementById('modalConfirmBtn');
+
+            // Reset and Set classes/content
+            modal.className = 'custom-modal modal-theme-' + options.theme;
+            confirmBtn.className = 'btn btn-' + options.theme;
+            title.textContent = options.title;
+            message.textContent = options.message;
+            icon.textContent = options.icon;
+            confirmBtn.href = options.confirmUrl;
+            confirmBtn.textContent = options.confirmText;
+
+            overlay.classList.add('active');
+        });
+
+        function closeConfirmModal() {
+            document.getElementById('confirmModalOverlay').classList.remove('active');
+        }
+
+        document.getElementById('confirmModalOverlay').addEventListener('click', function(e) {
+            if (e.target === this) closeConfirmModal();
+        });
+    </script>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

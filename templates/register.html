@@ -1,0 +1,294 @@
+{% extends "base.html" %}
+{% block title %}Register{% endblock %}
+
+{% block content %}
+<section class="section" style="min-height: calc(100vh - 200px); display: flex; align-items: center;">
+    <div class="container">
+        <div class="form-card animate-in">
+            <div class="form-card-header">
+                <div style="font-size: 2.5rem; margin-bottom: 8px;">👤</div>
+                <h2>Create Account</h2>
+                <p>Register to start applying for bus passes</p>
+            </div>
+            <div class="form-card-body">
+                <form method="POST" action="{{ url_for('register') }}" id="registerForm" autocomplete="off" novalidate>
+                    <div class="form-group">
+                        <label for="reg-name">Full Name</label>
+                        <input type="text" class="form-control" id="reg-name" name="name" required
+                            placeholder="Enter your full name" autocomplete="new-name">
+                        <div class="field-error" id="name-error"></div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="reg-email">Email Address</label>
+                            <input type="email" class="form-control" id="reg-email" name="email" required
+                                placeholder="Enter your email address" autocomplete="new-email">
+                            <div class="field-error" id="email-error"></div>
+                        </div>
+                        <div class="form-group">
+                            <label for="reg-phone">Phone Number <span style="color: var(--danger);">*</span></label>
+                            <input type="tel" class="form-control" id="reg-phone" name="phone" required
+                                placeholder="Enter 10-digit number" maxlength="10" autocomplete="new-phone"
+                                oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+                            <div class="field-error" id="phone-error"></div>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="reg-password">Password</label>
+                            <div style="position: relative;">
+                                <input type="password" class="form-control" id="reg-password" name="password" required
+                                    placeholder="Min 6 characters" minlength="6" style="padding-right: 44px;"
+                                    autocomplete="new-password">
+                                <button type="button" class="password-toggle"
+                                    onclick="togglePassword('reg-password', this)"
+                                    aria-label="Toggle password visibility">
+                                    <svg class="eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                        <circle cx="12" cy="12" r="3"></circle>
+                                    </svg>
+                                </button>
+                            </div>
+                            <div class="field-error" id="password-error"></div>
+                        </div>
+                        <div class="form-group">
+                            <label for="reg-confirm">Confirm Password</label>
+                            <div style="position: relative;">
+                                <input type="password" class="form-control" id="reg-confirm" name="confirm_password"
+                                    required placeholder="Re-enter password" style="padding-right: 44px;"
+                                    autocomplete="new-password">
+                                <button type="button" class="password-toggle"
+                                    onclick="togglePassword('reg-confirm', this)"
+                                    aria-label="Toggle password visibility">
+                                    <svg class="eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                        <circle cx="12" cy="12" r="3"></circle>
+                                    </svg>
+                                </button>
+                            </div>
+                            <!-- Password match indicator -->
+                            <div id="password-match"
+                                style="display: none; font-size: 0.82rem; font-weight: 600; margin-top: 6px; display: none;">
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-lg" id="registerBtn"
+                        style="width: 100%; margin-top: 8px;">Create Account →</button>
+                </form>
+                <p style="text-align: center; margin-top: 24px; color: var(--text-light); font-size: 0.9rem;">
+                    Already have an account? <a href="{{ url_for('login') }}" style="font-weight: 600;">Login here</a>
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<style>
+    .field-error {
+        color: var(--danger);
+        font-size: 0.8rem;
+        font-weight: 500;
+        margin-top: 5px;
+        min-height: 0;
+        transition: all 0.2s ease;
+    }
+
+    .field-error:not(:empty) {
+        min-height: 18px;
+    }
+
+    .form-control.input-error {
+        border-color: var(--danger) !important;
+        box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1) !important;
+    }
+
+    .form-control.input-success {
+        border-color: var(--success) !important;
+        box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1) !important;
+    }
+
+    .match-yes {
+        color: #059669;
+    }
+
+    .match-no {
+        color: #DC2626;
+    }
+</style>
+
+<script>
+    // Toggle password visibility
+    function togglePassword(inputId, btn) {
+        var input = document.getElementById(inputId);
+        var isPassword = input.type === 'password';
+        input.type = isPassword ? 'text' : 'password';
+        if (isPassword) {
+            btn.innerHTML = '<svg class="eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"></path><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>';
+        } else {
+            btn.innerHTML = '<svg class="eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>';
+        }
+    }
+
+    // Real-time validation
+    (function () {
+        var nameInput = document.getElementById('reg-name');
+        var emailInput = document.getElementById('reg-email');
+        var phoneInput = document.getElementById('reg-phone');
+        var passInput = document.getElementById('reg-password');
+        var confirmInput = document.getElementById('reg-confirm');
+        var matchIndicator = document.getElementById('password-match');
+
+        // Email validation
+        emailInput.addEventListener('input', function () {
+            var err = document.getElementById('email-error');
+            var val = emailInput.value.trim();
+            if (val.length === 0) {
+                err.textContent = '';
+                emailInput.classList.remove('input-error', 'input-success');
+            } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)) {
+                err.textContent = '⚠ Please enter a valid email address';
+                emailInput.classList.add('input-error');
+                emailInput.classList.remove('input-success');
+            } else {
+                err.textContent = '';
+                emailInput.classList.remove('input-error');
+                emailInput.classList.add('input-success');
+            }
+        });
+
+        // Phone validation — only numbers, exactly 10 digits
+        phoneInput.addEventListener('input', function () {
+            var err = document.getElementById('phone-error');
+            var val = phoneInput.value.trim();
+            if (val.length === 0) {
+                err.textContent = '⚠ Phone number is required';
+                phoneInput.classList.add('input-error');
+                phoneInput.classList.remove('input-success');
+            } else if (val.length < 10) {
+                err.textContent = '⚠ Enter a valid 10-digit phone number';
+                phoneInput.classList.add('input-error');
+                phoneInput.classList.remove('input-success');
+            } else {
+                err.textContent = '';
+                phoneInput.classList.remove('input-error');
+                phoneInput.classList.add('input-success');
+            }
+        });
+
+        // Name validation
+        nameInput.addEventListener('input', function () {
+            var err = document.getElementById('name-error');
+            var val = nameInput.value.trim();
+            if (val.length > 0 && val.length < 2) {
+                err.textContent = '⚠ Name must be at least 2 characters';
+                nameInput.classList.add('input-error');
+                nameInput.classList.remove('input-success');
+            } else if (val.length >= 2) {
+                err.textContent = '';
+                nameInput.classList.remove('input-error');
+                nameInput.classList.add('input-success');
+            } else {
+                err.textContent = '';
+                nameInput.classList.remove('input-error', 'input-success');
+            }
+        });
+
+        // Password length
+        passInput.addEventListener('input', function () {
+            var err = document.getElementById('password-error');
+            var val = passInput.value;
+            if (val.length > 0 && val.length < 6) {
+                err.textContent = '⚠ Password must be at least 6 characters';
+                passInput.classList.add('input-error');
+                passInput.classList.remove('input-success');
+            } else if (val.length >= 6) {
+                err.textContent = '';
+                passInput.classList.remove('input-error');
+                passInput.classList.add('input-success');
+            } else {
+                err.textContent = '';
+                passInput.classList.remove('input-error', 'input-success');
+            }
+            checkPasswordMatch();
+        });
+
+        // Confirm password — match indicator
+        confirmInput.addEventListener('input', checkPasswordMatch);
+
+        function checkPasswordMatch() {
+            var pass = passInput.value;
+            var confirm = confirmInput.value;
+            if (confirm.length === 0) {
+                matchIndicator.style.display = 'none';
+                confirmInput.classList.remove('input-error', 'input-success');
+                return;
+            }
+            matchIndicator.style.display = 'block';
+            if (pass === confirm) {
+                matchIndicator.innerHTML = '✅ Passwords match';
+                matchIndicator.className = 'match-yes';
+                confirmInput.classList.remove('input-error');
+                confirmInput.classList.add('input-success');
+            } else {
+                matchIndicator.innerHTML = '❌ Passwords do not match';
+                matchIndicator.className = 'match-no';
+                confirmInput.classList.add('input-error');
+                confirmInput.classList.remove('input-success');
+            }
+        }
+
+        // Form submit validation
+        document.getElementById('registerForm').addEventListener('submit', function (e) {
+            var valid = true;
+
+            if (nameInput.value.trim().length < 2) {
+                document.getElementById('name-error').textContent = '⚠ Full name is required';
+                nameInput.classList.add('input-error');
+                valid = false;
+            }
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailInput.value.trim())) {
+                document.getElementById('email-error').textContent = '⚠ Please enter a valid email address';
+                emailInput.classList.add('input-error');
+                valid = false;
+            }
+            if (phoneInput.value.trim().length !== 10) {
+                document.getElementById('phone-error').textContent = '⚠ Enter a valid 10-digit phone number';
+                phoneInput.classList.add('input-error');
+                valid = false;
+            }
+            if (passInput.value.length < 6) {
+                document.getElementById('password-error').textContent = '⚠ Password must be at least 6 characters';
+                passInput.classList.add('input-error');
+                valid = false;
+            }
+            if (passInput.value !== confirmInput.value) {
+                matchIndicator.style.display = 'block';
+                matchIndicator.innerHTML = '❌ Passwords do not match';
+                matchIndicator.className = 'match-no';
+                confirmInput.classList.add('input-error');
+                valid = false;
+            }
+
+            if (!valid) {
+                e.preventDefault();
+            }
+        });
+
+        // Clear autofill on page load
+        setTimeout(function () {
+            emailInput.value = '';
+            phoneInput.value = '';
+            passInput.value = '';
+            confirmInput.value = '';
+            nameInput.value = '';
+        }, 50);
+    })();
+</script>
+{% endblock %}

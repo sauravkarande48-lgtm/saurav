@@ -1,0 +1,351 @@
+{% extends "base.html" %}
+{% block title %}Apply for Bus Pass{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Apply for Bus Pass</h1>
+    <p>Fill in your details to apply for a new bus pass</p>
+</div>
+
+<section class="section">
+    <div class="container">
+        <div class="form-card animate-in" style="max-width: 640px;">
+            <div class="form-card-header">
+                <div style="font-size: 2rem; margin-bottom: 8px;">🎫</div>
+                <h2>Bus Pass Application</h2>
+                <p>All fields marked are required</p>
+            </div>
+            <div class="form-card-body">
+                <form method="POST" action="{{ url_for('apply_pass') }}" enctype="multipart/form-data" data-validate>
+                    <!-- Personal Details -->
+                    <h3
+                        style="font-size: 1rem; font-weight: 700; color: var(--primary); margin-bottom: 16px; padding-bottom: 8px; border-bottom: 2px solid var(--info-bg);">
+                        👤 Personal Details</h3>
+
+                    <div class="form-group">
+                        <label for="full_name">Full Name</label>
+                        <input type="text" class="form-control" id="full_name" name="full_name" required
+                            value="{{ session.user_name }}" placeholder="Enter your full name">
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="age">Age</label>
+                            <input type="number" class="form-control" id="age" name="age" required min="10" max="80"
+                                placeholder="e.g., 25"
+                                oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 2)">
+                        </div>
+                        <div class="form-group">
+                            <label for="gender">Gender</label>
+                            <select class="form-control" id="gender" name="gender" required>
+                                <option value="">Select Gender</option>
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Route Details -->
+                    <h3
+                        style="font-size: 1rem; font-weight: 700; color: var(--primary); margin: 24px 0 16px; padding-bottom: 8px; border-bottom: 2px solid var(--info-bg);">
+                        🗺️ Route Selection</h3>
+
+                    <div class="form-row">
+                        <!-- Boarding Stop -->
+                        <div class="form-group">
+                            <label>Boarding Stop</label>
+                            <div class="custom-select-wrapper" id="wrapper-from">
+                                <input type="hidden" name="route_from" id="route_from" required>
+                                <div class="custom-select-trigger" onclick="toggleDropdown('wrapper-from')">
+                                    <span class="trigger-text">Select boarding stop</span>
+                                </div>
+                                <div class="custom-select-dropdown">
+                                    <div class="custom-select-search">
+                                        <input type="text" class="custom-select-search-input" placeholder="Search stops..." onkeyup="filterOptions('wrapper-from', this.value)">
+                                    </div>
+                                    <div class="custom-select-options">
+                                        {% for stop in stops %}
+                                        <div class="custom-select-option" data-value="{{ stop }}" onclick="selectOption('wrapper-from', '{{ stop }}')">{{ stop }}</div>
+                                        {% endfor %}
+                                        <div class="custom-select-no-results">No stops found</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Destination Stop -->
+                        <div class="form-group">
+                            <label>Destination Stop</label>
+                            <div class="custom-select-wrapper" id="wrapper-to">
+                                <input type="hidden" name="route_to" id="route_to" required>
+                                <div class="custom-select-trigger" onclick="toggleDropdown('wrapper-to')">
+                                    <span class="trigger-text">Select destination stop</span>
+                                </div>
+                                <div class="custom-select-dropdown">
+                                    <div class="custom-select-search">
+                                        <input type="text" class="custom-select-search-input" placeholder="Search stops..." onkeyup="filterOptions('wrapper-to', this.value)">
+                                    </div>
+                                    <div class="custom-select-options">
+                                        {% for stop in stops %}
+                                        <div class="custom-select-option" data-value="{{ stop }}" onclick="selectOption('wrapper-to', '{{ stop }}')">{{ stop }}</div>
+                                        {% endfor %}
+                                        <div class="custom-select-no-results">No stops found</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Route Info Badge -->
+                    <div id="route-info"
+                        style="display: none; background: linear-gradient(135deg, #EFF6FF, #DBEAFE); padding: 16px; border-radius: var(--radius); margin-bottom: 20px; border: 1px solid #BFDBFE;">
+                        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
+                            <span style="font-size: 1.2rem;">🚌</span>
+                            <span id="route-summary"
+                                style="font-weight: 700; color: var(--primary-dark); font-size: 1rem;"></span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span id="distance-badge"
+                                style="display: inline-block; padding: 3px 10px; border-radius: 50px; font-size: 0.75rem; font-weight: 600; background: #DBEAFE; color: var(--primary);"></span>
+                            <span id="multiplier-text" style="font-size: 0.82rem; color: var(--text-muted);"></span>
+                        </div>
+                    </div>
+
+                    <!-- Pass Type -->
+                    <h3
+                        style="font-size: 1rem; font-weight: 700; color: var(--primary); margin: 24px 0 16px; padding-bottom: 8px; border-bottom: 2px solid var(--info-bg);">
+                        🎫 Pass Type</h3>
+
+                    <div class="form-group">
+                        <label for="pass_type">Select Pass Type</label>
+                        <select class="form-control" id="pass_type" name="pass_type" required
+                            onchange="updateRoutePrice()">
+                            <option value="">Choose a pass type</option>
+                            <option value="weekly">Weekly Pass — ₹150 (7 days)</option>
+                            <option value="monthly">Monthly Pass — ₹500 (30 days)</option>
+                            <option value="3months">3-Month Pass — ₹1,350 (90 days, 10% off)</option>
+                            <option value="6months">6-Month Pass — ₹2,700 (180 days, 10% off)</option>
+                            <option value="student">Student Pass — ₹400 (30 days, ID required)</option>
+                            <option value="senior">Senior Citizen Pass — ₹350 (30 days)</option>
+                        </select>
+                    </div>
+
+                    <div id="price-display"
+                        style="display: none; background: var(--info-bg); padding: 16px; border-radius: var(--radius); margin-bottom: 20px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span style="font-weight: 600; color: var(--text-dark);">Total Price:</span>
+                            <span id="price-value"
+                                style="font-size: 1.4rem; font-weight: 800; color: var(--primary);">₹0</span>
+                        </div>
+                        <div id="price-note"
+                            style="font-size: 0.8rem; color: var(--text-muted); margin-top: 6px; display: none;"></div>
+                    </div>
+
+                    <!-- Documents -->
+                    <h3
+                        style="font-size: 1rem; font-weight: 700; color: var(--primary); margin: 24px 0 16px; padding-bottom: 8px; border-bottom: 2px solid var(--info-bg);">
+                        📎 Documents</h3>
+
+                    <div class="form-group">
+                        <label for="photo">Photo (Optional)</label>
+                        <input type="file" class="form-control" id="photo" name="photo" accept="image/*">
+                        <small style="color: var(--text-muted); font-size: 0.8rem;">Upload a passport-size photo (JPG,
+                            PNG — max 5MB)</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="id_proof">ID Proof <span style="color: var(--danger);">*</span></label>
+                        <input type="file" class="form-control" id="id_proof" name="id_proof" required
+                            accept="image/*,.pdf" onchange="document.getElementById('id-proof-warning').style.display = 'none'">
+                        <small id="id-proof-warning" style="color: var(--danger); font-weight: 600; font-size: 0.8rem;">⚠️ ID Proof is
+                            required for verification (Aadhar, Student ID, etc. — max 5MB)</small>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-lg" style="width: 100%; margin-top: 8px;">Submit
+                        Application →</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // --- Custom Searchable Select Logic ---
+    function toggleDropdown(wrapperId) {
+        const wrapper = document.getElementById(wrapperId);
+        const isActive = wrapper.classList.contains('active');
+        
+        // Close all other dropdowns
+        document.querySelectorAll('.custom-select-wrapper').forEach(w => w.classList.remove('active'));
+        
+        if (!isActive) {
+            wrapper.classList.add('active');
+            const searchInput = wrapper.querySelector('.custom-select-search-input');
+            searchInput.value = '';
+            filterOptions(wrapperId, ''); // Reset filter
+            setTimeout(() => searchInput.focus(), 100);
+        }
+    }
+
+    function selectOption(wrapperId, value) {
+        const wrapper = document.getElementById(wrapperId);
+        const input = wrapper.querySelector('input[type="hidden"]');
+        const triggerText = wrapper.querySelector('.trigger-text');
+        
+        input.value = value;
+        triggerText.textContent = value;
+        wrapper.classList.remove('active');
+        
+        // Update selected class in options
+        wrapper.querySelectorAll('.custom-select-option').forEach(opt => {
+            opt.classList.toggle('selected', opt.getAttribute('data-value') === value);
+        });
+
+        // Trigger existing route price update
+        updateRoutePrice();
+    }
+
+    function filterOptions(wrapperId, searchTerm) {
+        const wrapper = document.getElementById(wrapperId);
+        const options = wrapper.querySelectorAll('.custom-select-option');
+        const noResults = wrapper.querySelector('.custom-select-no-results');
+        const term = searchTerm.toLowerCase().trim();
+        let totalVisible = 0;
+
+        options.forEach(opt => {
+            const text = opt.textContent.toLowerCase();
+            if (text.includes(term)) {
+                opt.style.display = 'block';
+                totalVisible++;
+            } else {
+                opt.style.display = 'none';
+            }
+        });
+
+        noResults.style.display = totalVisible === 0 ? 'block' : 'none';
+    }
+
+    // Close dropdowns on outside click
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.custom-select-wrapper')) {
+            document.querySelectorAll('.custom-select-wrapper').forEach(w => w.classList.remove('active'));
+        }
+    });
+
+    const basePrices = { 'weekly': 150, 'monthly': 500, '3months': 1350, '6months': 2700, 'student': 400, 'senior': 350 };
+    let currentPrices = { ...basePrices };
+
+    function updateRoutePrice() {
+        const fromVal = document.getElementById('route_from').value;
+        const toVal = document.getElementById('route_to').value;
+        const routeInfo = document.getElementById('route-info');
+
+        // Validate same stop
+        if (fromVal && toVal && fromVal === toVal) {
+            routeInfo.style.display = 'block';
+            routeInfo.style.background = 'linear-gradient(135deg, #FEF2F2, #FECACA)';
+            routeInfo.style.borderColor = '#FCA5A5';
+            document.getElementById('route-summary').textContent = '⚠️ Boarding and destination cannot be the same';
+            document.getElementById('distance-badge').style.display = 'none';
+            document.getElementById('multiplier-text').textContent = '';
+            document.getElementById('price-display').style.display = 'none';
+            return;
+        }
+
+        // Fetch distance-adjusted pricing
+        if (fromVal && toVal && fromVal !== toVal) {
+            // Immediately reset styles to loading/neutral state while fetching
+            routeInfo.style.display = 'block';
+            routeInfo.style.background = 'linear-gradient(135deg, #F9FAFB, #F3F4F6)';
+            routeInfo.style.borderColor = '#D1D5DB';
+            document.getElementById('route-summary').textContent = '🔄 Calculating route...';
+            document.getElementById('distance-badge').style.display = 'none';
+            document.getElementById('multiplier-text').textContent = '';
+
+            fetch('/api/route-price?from=' + encodeURIComponent(fromVal) + '&to=' + encodeURIComponent(toVal))
+                .then(function (r) { return r.json(); })
+                .then(function (data) {
+                    currentPrices = data.prices;
+
+                    // Show route info
+                    routeInfo.style.display = 'block';
+                    routeInfo.style.background = 'linear-gradient(135deg, #EFF6FF, #DBEAFE)';
+                    routeInfo.style.borderColor = '#BFDBFE';
+                    document.getElementById('route-summary').textContent = fromVal + ' → ' + toVal;
+
+                    var badge = document.getElementById('distance-badge');
+                    badge.style.display = 'inline-block';
+                    badge.textContent = data.category;
+
+                    // Color badge based on distance
+                    if (data.multiplier <= 0.8) {
+                        badge.style.background = '#D1FAE5'; badge.style.color = '#065F46';
+                    } else if (data.multiplier <= 1.0) {
+                        badge.style.background = '#DBEAFE'; badge.style.color = '#1E40AF';
+                    } else if (data.multiplier <= 1.2) {
+                        badge.style.background = '#FEF3C7'; badge.style.color = '#92400E';
+                    } else {
+                        badge.style.background = '#FEE2E2'; badge.style.color = '#991B1B';
+                    }
+
+                    var mult = data.multiplier;
+                    var multText = '';
+                    if (mult < 1.0) multText = Math.round((1 - mult) * 100) + '% reduced fare';
+                    else if (mult > 1.0) multText = Math.round((mult - 1) * 100) + '% distance surcharge';
+                    else multText = 'Standard fare';
+                    document.getElementById('multiplier-text').textContent = multText;
+
+                    // Update pass type dropdown labels with adjusted prices
+                    var opts = document.getElementById('pass_type').options;
+                    var labels = {
+                        'weekly': 'Weekly Pass — ₹' + data.prices.weekly.toLocaleString() + ' (7 days)',
+                        'monthly': 'Monthly Pass — ₹' + data.prices.monthly.toLocaleString() + ' (30 days)',
+                        '3months': '3-Month Pass — ₹' + data.prices['3months'].toLocaleString() + ' (90 days)',
+                        '6months': '6-Month Pass — ₹' + data.prices['6months'].toLocaleString() + ' (180 days)',
+                        'student': 'Student Pass — ₹' + data.prices.student.toLocaleString() + ' (30 days)',
+                        'senior': 'Senior Citizen Pass — ₹' + data.prices.senior.toLocaleString() + ' (30 days)'
+                    };
+                    for (var i = 0; i < opts.length; i++) {
+                        if (labels[opts[i].value]) opts[i].textContent = labels[opts[i].value];
+                    }
+
+                    showPrice();
+                });
+        } else {
+            routeInfo.style.display = 'none';
+            currentPrices = { ...basePrices };
+            showPrice();
+        }
+    }
+
+    function showPrice() {
+        var passType = document.getElementById('pass_type').value;
+        var display = document.getElementById('price-display');
+        var value = document.getElementById('price-value');
+        var note = document.getElementById('price-note');
+
+        if (passType && currentPrices[passType]) {
+            display.style.display = 'block';
+            value.textContent = '₹' + currentPrices[passType].toLocaleString();
+
+            if (currentPrices[passType] !== basePrices[passType]) {
+                note.style.display = 'block';
+                if (currentPrices[passType] < basePrices[passType]) {
+                    note.textContent = '✨ Short distance discount applied (base: ₹' + basePrices[passType].toLocaleString() + ')';
+                    note.style.color = '#059669';
+                } else {
+                    note.textContent = '📍 Distance-based pricing applied (base: ₹' + basePrices[passType].toLocaleString() + ')';
+                    note.style.color = 'var(--text-muted)';
+                }
+            } else {
+                note.style.display = 'none';
+            }
+        } else {
+            display.style.display = 'none';
+        }
+    }
+</script>
+{% endblock %}

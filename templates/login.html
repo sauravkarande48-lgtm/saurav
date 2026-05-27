@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+{% block title %}Login{% endblock %}
+
+{% block content %}
+<section class="section" style="min-height: calc(100vh - 200px); display: flex; align-items: center;">
+    <div class="container">
+        <div class="form-card animate-in">
+            <div class="form-card-header">
+                <div style="font-size: 2.5rem; margin-bottom: 8px;">🔐</div>
+                <h2>Welcome Back</h2>
+                <p>Log in to manage your bus passes</p>
+            </div>
+            <div class="form-card-body">
+                <form method="POST" action="{{ url_for('login') }}" id="loginForm" autocomplete="off" novalidate>
+                    <div class="form-group">
+                        <label for="login-email">Email Address</label>
+                        <input type="email" class="form-control" id="login-email" name="email" required placeholder="Enter your email address" autocomplete="new-email">
+                        <div class="field-error" id="login-email-error"></div>
+                    </div>
+                    <div class="form-group">
+                        <label for="login-password">Password</label>
+                        <div style="position: relative;">
+                            <input type="password" class="form-control" id="login-password" name="password" required placeholder="Enter your password" style="padding-right: 44px;" autocomplete="new-password">
+                            <button type="button" class="password-toggle" onclick="togglePassword('login-password', this)" aria-label="Toggle password visibility">
+                                <svg class="eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                </svg>
+                            </button>
+                        </div>
+                        <div class="field-error" id="login-password-error"></div>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-lg" style="width: 100%; margin-top: 8px;">Login →</button>
+                </form>
+                <p style="text-align: center; margin-top: 24px; color: var(--text-light); font-size: 0.9rem;">
+                    Don't have an account? <a href="{{ url_for('register') }}" style="font-weight: 600;">Register here</a>
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<style>
+    .field-error {
+        color: var(--danger);
+        font-size: 0.8rem;
+        font-weight: 500;
+        margin-top: 5px;
+        min-height: 0;
+        transition: all 0.2s ease;
+    }
+    .field-error:not(:empty) {
+        min-height: 18px;
+    }
+    .form-control.input-error {
+        border-color: var(--danger) !important;
+        box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1) !important;
+    }
+</style>
+
+<script>
+function togglePassword(inputId, btn) {
+    var input = document.getElementById(inputId);
+    var isPassword = input.type === 'password';
+    input.type = isPassword ? 'text' : 'password';
+    if (isPassword) {
+        btn.innerHTML = '<svg class="eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"></path><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>';
+    } else {
+        btn.innerHTML = '<svg class="eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>';
+    }
+}
+
+(function() {
+    var emailInput = document.getElementById('login-email');
+    var passInput = document.getElementById('login-password');
+
+    // Real-time email validation
+    emailInput.addEventListener('input', function() {
+        var err = document.getElementById('login-email-error');
+        var val = emailInput.value.trim();
+        if (val.length > 0 && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)) {
+            err.textContent = '⚠ Please enter a valid email address';
+            emailInput.classList.add('input-error');
+        } else {
+            err.textContent = '';
+            emailInput.classList.remove('input-error');
+        }
+    });
+
+    // Form submit validation
+    document.getElementById('loginForm').addEventListener('submit', function(e) {
+        var valid = true;
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailInput.value.trim())) {
+            document.getElementById('login-email-error').textContent = '⚠ Please enter a valid email address';
+            emailInput.classList.add('input-error');
+            valid = false;
+        }
+        if (passInput.value.length === 0) {
+            document.getElementById('login-password-error').textContent = '⚠ Password is required';
+            passInput.classList.add('input-error');
+            valid = false;
+        }
+        if (!valid) e.preventDefault();
+    });
+
+    // Clear autofill on page load
+    setTimeout(function() {
+        emailInput.value = '';
+        passInput.value = '';
+    }, 50);
+})();
+</script>
+{% endblock %}

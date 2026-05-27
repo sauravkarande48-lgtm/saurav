@@ -1,0 +1,425 @@
+{% extends "base.html" %}
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block content %}
+<!-- Admin Header -->
+<div class="dashboard-header">
+    <div class="dashboard-header-inner">
+        <div>
+            <h1>🛡️ Admin Dashboard</h1>
+            <p>Manage users, passes, payments, and support tickets</p>
+        </div>
+        <div>
+            <span class="badge badge-active" style="font-size: 0.9rem; padding: 8px 16px;">Admin: {{ session.user_name }}</span>
+        </div>
+    </div>
+</div>
+
+<div class="dashboard-body">
+    <!-- Stats Row -->
+    <div class="grid-4 mb-4" style="margin-top: 0;">
+        <div class="stat-card">
+            <div class="stat-icon blue">👥</div>
+            <div class="stat-info">
+                <h3>{{ stats.total_users }}</h3>
+                <p>Total Users</p>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon orange">⏳</div>
+            <div class="stat-info">
+                <h3>{{ stats.pending_passes }}</h3>
+                <p>Pending Passes</p>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon green">🎫</div>
+            <div class="stat-info">
+                <h3>{{ stats.active_passes }}</h3>
+                <p>Active Passes</p>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon purple">💰</div>
+            <div class="stat-info">
+                <h3>₹{{ "%.0f"|format(stats.total_revenue) }}</h3>
+                <p>Total Revenue</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabs Navigation -->
+    <div class="tab-nav">
+        <button class="tab-btn active" data-tab="tab-passes">🎫 Pass Applications</button>
+        <button class="tab-btn" data-tab="tab-users">👥 Users</button>
+        <button class="tab-btn" data-tab="tab-payments">💳 Payments</button>
+        <button class="tab-btn" data-tab="tab-tickets">🎧 Support Tickets</button>
+        <button class="tab-btn" data-tab="tab-messages">📬 Contact Messages</button>
+    </div>
+
+    <!-- ===== TAB: Pass Applications ===== -->
+    <div class="tab-content active" id="tab-passes">
+        <div class="card">
+            <div class="card-header">🎫 All Pass Applications ({{ passes|length }})</div>
+            <div class="card-body" style="padding: 0;">
+                {% if passes %}
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>User</th>
+                                <th>Passenger</th>
+                                <th>Route</th>
+                                <th>Type</th>
+                                <th>Price</th>
+                                <th>Status</th>
+                                <th>Dates</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for p in passes %}
+                            <tr>
+                                <td><strong>#{{ p.id }}</strong></td>
+                                <td>
+                                    <div style="font-weight: 600; font-size: 0.85rem;">{{ p.user_name }}</div>
+                                    <div style="font-size: 0.78rem; color: var(--text-muted);">{{ p.user_email }}</div>
+                                </td>
+                                <td>
+                                    {{ p.full_name }}
+                                    <div style="font-size: 0.78rem; color: var(--text-muted);">{{ p.age }}y / {{
+                                        p.gender }}</div>
+                                </td>
+                                <td>{{ p.route_from }} → {{ p.route_to }}</td>
+                                <td>{% if p.pass_type == 'weekly' %}Weekly{% elif p.pass_type == 'monthly' %}Monthly{%
+                                    elif p.pass_type == '3months' %}3-Month{% elif p.pass_type == '6months' %}6-Month{%
+                                    elif p.pass_type == 'student' %}Student{% elif p.pass_type == 'senior' %}Senior{%
+                                    else %}{{ p.pass_type }}{% endif %}</td>
+                                <td><strong>₹{{ "%.0f"|format(p.price) }}</strong></td>
+                                <td><span class="badge badge-{{ p.status|lower }}">{{ p.status }}</span></td>
+                                <td style="font-size: 0.8rem;">
+                                    {% if p.issue_date %}
+                                    {{ p.issue_date }}<br>to {{ p.expiry_date }}
+                                    {% else %}
+                                    —
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div style="display: flex; flex-direction: column; gap: 6px;">
+                                        <a href="{{ url_for('admin_view_pass', pass_id=p.id) }}"
+                                            class="btn btn-outline btn-sm" style="font-size: 0.78rem;">👁️ View
+                                            Details</a>
+
+                                        {% if p.status == 'Pending' %}
+                                        <div style="display: flex; gap: 4px;">
+                                            <a href="{{ url_for('admin_approve', pass_id=p.id) }}"
+                                                class="btn btn-success btn-sm" style="flex: 1; font-size: 0.75rem;"
+                                                data-confirm data-confirm-title="Approve Application?"
+                                                data-confirm-message="Are you sure you want to approve this pass application for {{ p.full_name }}?"
+                                                data-confirm-icon="✅" data-confirm-text="Yes, Approve"
+                                                data-confirm-theme="success">✓ Approve</a>
+                                            <a href="{{ url_for('admin_reject', pass_id=p.id) }}"
+                                                class="btn btn-danger btn-sm" style="flex: 1; font-size: 0.75rem;"
+                                                data-confirm data-confirm-title="Reject Application?"
+                                                data-confirm-message="Are you sure you want to reject this pass application for {{ p.full_name }}?"
+                                                data-confirm-icon="✕" data-confirm-text="Yes, Reject"
+                                                data-confirm-theme="danger">✕ Reject</a>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="empty-state">
+                    <div class="empty-state-icon">🎫</div>
+                    <h3>No Applications</h3>
+                    <p>No pass applications have been submitted yet.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== TAB: Users ===== -->
+    <div class="tab-content" id="tab-users">
+        <div class="card">
+            <div class="card-header">👥 Registered Users ({{ users|length }})</div>
+            <div class="card-body" style="padding: 0;">
+                {% if users %}
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Role</th>
+                                <th>Registered</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for u in users %}
+                            <tr>
+                                <td>#{{ u.id }}</td>
+                                <td><strong>{{ u.name }}</strong></td>
+                                <td>{{ u.email }}</td>
+                                <td><span class="badge badge-active">{{ u.role }}</span></td>
+                                <td style="font-size: 0.85rem;">{{ u.created_at|datetime }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="empty-state">
+                    <div class="empty-state-icon">👥</div>
+                    <h3>No Users</h3>
+                    <p>No users have registered yet.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== TAB: Payments ===== -->
+    <div class="tab-content" id="tab-payments">
+        <div class="card">
+            <div class="card-header">💳 Payment History ({{ payments|length }})</div>
+            <div class="card-body" style="padding: 0;">
+                {% if payments %}
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Passenger</th>
+                                <th>Route</th>
+                                <th>Type</th>
+                                <th>Amount</th>
+                                <th>Payment Ref</th>
+                                <th>Paid At</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for pay in payments %}
+                            <tr>
+                                <td>#{{ pay.id }}</td>
+                                <td><strong>{{ pay.full_name }}</strong></td>
+                                <td>{{ pay.route_from }} → {{ pay.route_to }}</td>
+                                <td>{% if pay.pass_type == 'weekly' %}Weekly{% elif pay.pass_type == 'monthly'
+                                    %}Monthly{% elif pay.pass_type == '3months' %}3-Month{% elif pay.pass_type ==
+                                    '6months' %}6-Month{% elif pay.pass_type == 'student' %}Student{% elif pay.pass_type
+                                    == 'senior' %}Senior{% else %}{{ pay.pass_type }}{% endif %}</td>
+                                <td><strong>₹{{ "%.0f"|format(pay.amount) }}</strong></td>
+                                <td>
+                                    <div style="font-size: 0.8rem; margin-bottom: 4px;">
+                                        <span style="color: var(--text-muted);">Order:</span> 
+                                        <code style="background: var(--info-bg); padding: 1px 4px; border-radius: 3px;">{{ pay.order_id }}</code>
+                                    </div>
+                                    {% if pay.razorpay_payment_id %}
+                                    <div style="font-size: 0.8rem;">
+                                        <span style="color: var(--text-muted);">Payment:</span> 
+                                        <code style="background: var(--success-bg); padding: 1px 4px; border-radius: 3px;">{{ pay.razorpay_payment_id }}</code>
+                                    </div>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="badge badge-{{ pay.status|lower }}">{{ pay.status }}</span>
+                                </td>
+                                <td style="font-size: 0.85rem;">{{ pay.paid_at|datetime if pay.paid_at else 'Pending' }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="empty-state">
+                    <div class="empty-state-icon">💳</div>
+                    <h3>No Payments</h3>
+                    <p>No payments have been made yet.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== TAB: Support Tickets ===== -->
+    <div class="tab-content" id="tab-tickets">
+        <div class="card">
+            <div class="card-header">🎧 Support Tickets ({{ tickets|length }})</div>
+            <div class="card-body" style="padding: 0;">
+                {% if tickets %}
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Subject</th>
+                                <th>Message</th>
+                                <th>Status</th>
+                                <th>Created</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for t in tickets %}
+                            <tr>
+                                <td>#{{ t.id }}</td>
+                                <td><strong>{{ t.name }}</strong></td>
+                                <td style="font-size: 0.85rem;">{{ t.email }}</td>
+                                <td>{{ t.subject }}</td>
+                                <td
+                                    style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                    {{ t.message }}</td>
+                                <td>
+                                    <span class="badge badge-{{ t.status|lower|replace(' ', '-') }}">{{ t.status
+                                        }}</span>
+                                </td>
+                                <td style="font-size: 0.85rem;">{{ t.created_at|datetime }}</td>
+                                <td style="white-space: nowrap;">
+                                    {% if t.status != 'In Progress' %}
+                                    <a href="{{ url_for('admin_update_ticket', ticket_id=t.id, status='In Progress') }}"
+                                        class="btn btn-warning btn-sm" style="font-size: 0.75rem;">In Progress</a>
+                                    {% endif %}
+                                    {% if t.status != 'Resolved' %}
+                                    <button class="btn btn-primary btn-sm" style="font-size: 0.75rem;" 
+                                            data-ticket-id="{{ t.id }}"
+                                            data-ticket-subject="{{ t.subject }}"
+                                            data-ticket-message="{{ t.message }}"
+                                            onclick="handleRespondClick(this)">Respond</button>
+                                    {% endif %}
+                                    <a href="{{ url_for('admin_delete_ticket', ticket_id=t.id) }}"
+                                        class="btn btn-danger btn-sm" style="font-size: 0.75rem;"
+                                        data-confirm="Delete this ticket permanently?">🗑</a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="empty-state">
+                    <div class="empty-state-icon">🎧</div>
+                    <h3>No Tickets</h3>
+                    <p>No support tickets have been submitted.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== TAB: Contact Messages ===== -->
+    <div class="tab-content" id="tab-messages">
+        <div class="card">
+            <div class="card-header">📬 Contact Messages ({{ messages|length }})</div>
+            <div class="card-body" style="padding: 0;">
+                {% if messages %}
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Message</th>
+                                <th>Received</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for m in messages %}
+                            <tr>
+                                <td>#{{ m.id }}</td>
+                                <td><strong>{{ m.name }}</strong></td>
+                                <td>{{ m.email }}</td>
+                                <td style="max-width: 300px;">{{ m.message }}</td>
+                                <td style="font-size: 0.85rem;">{{ m.created_at|datetime }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="empty-state">
+                    <div class="empty-state-icon">📬</div>
+                    <h3>No Messages</h3>
+                    <p>No contact messages received yet.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Respond Modal -->
+<div id="respondModalOverlay" class="modal-overlay">
+    <div class="custom-modal">
+        <div class="modal-header">
+            <div class="modal-icon">🎧</div>
+            <h2 class="modal-title">Respond to Ticket</h2>
+            <button class="modal-close-x" onclick="closeRespondModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <form id="respondForm" method="POST" action="{{ url_for('admin_ticket_respond') }}">
+                <input type="hidden" name="ticket_id" id="respondTicketId">
+                <p style="font-size: 0.9rem; margin-bottom: 8px; color: var(--text-light);">
+                    Subject: <span id="respondTicketSubject" style="font-weight: 600; color: var(--text-dark);"></span>
+                </p>
+                <div style="background: #f8fafc; padding: 12px; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 16px;">
+                    <label style="display: block; font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 5px;">User Message</label>
+                    <div id="respondTicketMessage" style="font-size: 0.9rem; color: var(--text-dark); line-height: 1.5; white-space: pre-wrap;"></div>
+                </div>
+                <div class="form-group">
+                    <label for="admin_response">Admin Response</label>
+                    <textarea name="admin_response" id="admin_response" class="form-control" rows="5" required placeholder="Type your response..."></textarea>
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-outline" onclick="closeRespondModal()">Cancel</button>
+            <button type="submit" form="respondForm" class="btn btn-primary">Send Response</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    function handleRespondClick(btn) {
+        const id = btn.getAttribute('data-ticket-id');
+        const subject = btn.getAttribute('data-ticket-subject');
+        const message = btn.getAttribute('data-ticket-message');
+        openRespondModal(id, subject, message);
+    }
+
+    function openRespondModal(id, subject, message) {
+        document.getElementById('respondTicketId').value = id;
+        document.getElementById('respondTicketSubject').textContent = subject;
+        document.getElementById('respondTicketMessage').textContent = message;
+        document.getElementById('respondModalOverlay').classList.add('active');
+    }
+
+    function closeRespondModal() {
+        document.getElementById('respondModalOverlay').classList.remove('active');
+    }
+
+    // Tab switching logic
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            btn.classList.add('active');
+            document.getElementById(btn.dataset.tab).classList.add('active');
+        });
+    });
+
+    // Close modal on escape
+    window.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closeRespondModal();
+    });
+</script>
+{% endblock %}

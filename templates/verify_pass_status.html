@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block title %}Pass Verification - Bus Pass System{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 600px; margin: 40px auto; padding: 20px;">
+    <div class="card animate-in" style="box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); border: none; overflow: hidden;">
+        
+        <!-- Status Header -->
+        <div class="status-header-{{ p.status|lower }}" style="padding: 40px 20px; text-align: center; color: white;">
+            <div style="font-size: 4rem; margin-bottom: 10px;">
+                {% if p.status == 'Active' %}✅{% elif p.status == 'Expired' %}❌{% else %}⏳{% endif %}
+            </div>
+            <h1 style="font-size: 2rem; font-weight: 800; margin: 0; text-transform: uppercase; letter-spacing: 1px;">
+                {{ p.status }} PASS
+            </h1>
+            <p style="margin: 10px 0 0; opacity: 0.9; font-weight: 500;">
+                Digital Transit Authority Verification System
+            </p>
+        </div>
+
+        <div class="card-body" style="padding: 30px;">
+            <div style="display: flex; gap: 20px; align-items: start; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 1px solid #E5E7EB;">
+                {% if p.photo %}
+                <div style="width: 100px; height: 120px; border-radius: 8px; overflow: hidden; border: 2px solid #E5E7EB; flex-shrink: 0;">
+                    <img src="{{ url_for('static', filename='uploads/' + p.photo) }}" style="width: 100%; height: 100%; object-fit: cover;">
+                </div>
+                {% endif %}
+                <div>
+                    <h2 style="margin: 0; font-size: 1.5rem; color: #1F2937;">{{ p.full_name }}</h2>
+                    <p style="margin: 5px 0; color: #6B7280; font-weight: 600;">Reference ID: BP-2026-{{ "%04d"|format(p.id) }}</p>
+                    <span class="badge badge-{{ p.status|lower }}" style="padding: 6px 12px; font-size: 0.9rem;">{{ p.status }}</span>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div class="detail-group">
+                    <label style="display: block; font-size: 0.75rem; color: #9CA3AF; text-transform: uppercase; font-weight: 700;">Route</label>
+                    <p style="margin: 4px 0; font-weight: 700; color: #374151;">{{ p.route_from }} → {{ p.route_to }}</p>
+                </div>
+                <div class="detail-group">
+                    <label style="display: block; font-size: 0.75rem; color: #9CA3AF; text-transform: uppercase; font-weight: 700;">Pass Type</label>
+                    <p style="margin: 4px 0; font-weight: 700; color: #374151;">{{ p.pass_type|title }}</p>
+                </div>
+                <div class="detail-group">
+                    <label style="display: block; font-size: 0.75rem; color: #9CA3AF; text-transform: uppercase; font-weight: 700;">Valid From</label>
+                    <p style="margin: 4px 0; font-weight: 700; color: #374151;">{{ p.issue_date or 'N/A' }}</p>
+                </div>
+                <div class="detail-group">
+                    <label style="display: block; font-size: 0.75rem; color: #9CA3AF; text-transform: uppercase; font-weight: 700;">Expiry Date</label>
+                    <p class="status-text-{{ p.status|lower }}" style="margin: 4px 0; font-weight: 700;">
+                        {{ p.expiry_date or 'N/A' }}
+                    </p>
+                </div>
+            </div>
+
+            <div style="margin-top: 40px; text-align: center; padding: 20px; background: #F9FAFB; border-radius: 12px;">
+                <div style="color: #6B7280; font-size: 0.85rem; margin-bottom: 10px;">
+                    Verification Timestamp: <strong>{{ "now"|datetime }}</strong>
+                </div>
+                <p style="font-size: 0.75rem; color: #9CA3AF; margin: 0;">
+                    This is an automated verification system. If you suspect fraud, please report to the Transit Authority.
+                </p>
+            </div>
+            
+            <div style="margin-top: 20px; text-align: center;">
+                <a href="{{ url_for('home') }}" class="btn btn-outline" style="width: 100%;">Back to Home</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .animate-in {
+        animation: slideUp 0.6s ease-out;
+    }
+    .status-header-active { background: #059669; }
+    .status-header-expired { background: #DC2626; }
+    .status-header-pending { background: #4B5563; }
+    
+    .status-text-active { color: #059669; }
+    .status-text-expired { color: #DC2626; }
+    .status-text-pending { color: #4B5563; }
+
+    @keyframes slideUp {
+        from { transform: translateY(30px); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
+    }
+</style>
+{% endblock %}

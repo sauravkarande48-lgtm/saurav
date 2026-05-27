@@ -1,0 +1,175 @@
+{% extends "base.html" %}
+{% block title %}Home{% endblock %}
+
+{% block content %}
+<!-- ===== HERO ===== -->
+<section class="hero">
+    <div class="hero-content">
+        <div class="hero-text">
+            <div class="hero-badge">
+                <span>🎫</span> Digital Bus Pass System
+            </div>
+            <h1>Travel Smart Across Mumbai<br><span>With Digital Bus Pass System</span></h1>
+            <p>Apply for your bus pass online, get instant approval, make secure payments, and download your digital
+                pass — all in one place.</p>
+            <div class="btn-group">
+                {% if current_user %}
+                <a href="{{ url_for('apply_pass') }}" class="btn btn-primary btn-lg">Apply for Pass →</a>
+                <a href="{{ url_for('dashboard') }}" class="btn btn-outline btn-lg">My Dashboard</a>
+                {% else %}
+                <a href="{{ url_for('register') }}" class="btn btn-primary btn-lg">Get Started →</a>
+                <a href="{{ url_for('login') }}" class="btn btn-outline btn-lg">Login</a>
+                {% endif %}
+            </div>
+
+            <!-- Trust Elements -->
+            <div style="display: flex; align-items: center; gap: 24px; margin-top: 28px; flex-wrap: wrap;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span style="font-size: 1.1rem;">✅</span>
+                    <span style="font-size: 0.88rem; color: rgba(255,255,255,0.85); font-weight: 500;">Trusted by Mumbai Commuters</span>
+                </div>
+                <span style="color: rgba(255,255,255,0.3); font-size: 0.7rem;">●</span>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span style="font-size: 1.1rem;">🎫</span>
+                    <span style="font-size: 0.88rem; color: rgba(255,255,255,0.85); font-weight: 500;">1000+ Passes Generated</span>
+                </div>
+                <span style="color: rgba(255,255,255,0.3); font-size: 0.7rem;">●</span>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span style="font-size: 1.1rem;">🗺️</span>
+                    <span style="font-size: 0.88rem; color: rgba(255,255,255,0.85); font-weight: 500;">40+ Mumbai Routes</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="hero-visual">
+            <div class="hero-card">
+                <div class="hero-card-header">
+                    <div class="hero-card-icon">🚌</div>
+                    <div>
+                        <div class="hero-card-title">Digital Bus Pass</div>
+                        <div class="hero-card-subtitle">Smart Transit Authority</div>
+                    </div>
+                </div>
+                <div class="hero-card-body">
+                    <div class="hero-card-row">
+                        <span>Passenger</span>
+                        <span>Saurav Karande</span>
+                    </div>
+                    <div class="hero-card-row">
+                        <span>Route</span>
+                        <span>Dadar → Andheri</span>
+                    </div>
+                    <div class="hero-card-row">
+                        <span>Pass Type</span>
+                        <span>Monthly</span>
+                    </div>
+                    <div class="hero-card-row">
+                        <span>Valid Till</span>
+                        <span>30 Apr 2026</span>
+                    </div>
+                </div>
+                <div class="hero-card-status">Active Pass</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ===== HOW IT WORKS ===== -->
+<section class="section" style="background: white;">
+    <div class="container">
+        <div class="section-header">
+            <div class="section-badge">📋 How It Works</div>
+            <h2>Get Your Bus Pass in 4 Easy Steps</h2>
+            <p>Our streamlined process makes applying for a bus pass quicker and easier than ever.</p>
+        </div>
+
+        <div class="grid-4">
+            <div class="feature-card animate-in">
+                <div class="feature-icon"><span>📝</span></div>
+                <h3>1. Register</h3>
+                <p>Create your account with a valid email address and secure password.</p>
+            </div>
+            <div class="feature-card animate-in">
+                <div class="feature-icon"><span>🎫</span></div>
+                <h3>2. Apply</h3>
+                <p>Fill in your details, choose your route and pass type, and submit your application.</p>
+            </div>
+            <div class="feature-card animate-in">
+                <div class="feature-icon"><span>💳</span></div>
+                <h3>3. Pay</h3>
+                <p>Once approved, make a secure payment to activate your bus pass.</p>
+            </div>
+            <div class="feature-card animate-in">
+                <div class="feature-icon"><span>📄</span></div>
+                <h3>4. Download</h3>
+                <p>Download your digital PDF bus pass and start travelling right away!</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ===== FEATURES ===== -->
+<section class="section">
+    <div class="container">
+        <div class="section-header">
+            <div class="section-badge">⭐ Features</div>
+            <h2>Why Choose Our System?</h2>
+            <p>Built with modern technologies for a seamless bus pass management experience.</p>
+        </div>
+
+        <div class="grid-3">
+            <div class="feature-card animate-in">
+                <div class="feature-icon"><span>🔒</span></div>
+                <h3>Secure Authentication</h3>
+                <p>Industry-standard password hashing and session management keeps your data safe.</p>
+            </div>
+            <div class="feature-card animate-in">
+                <div class="feature-icon"><span>📱</span></div>
+                <h3>Responsive Design</h3>
+                <p>Access your dashboard and manage passes from any device — desktop, tablet, or mobile.</p>
+            </div>
+            <div class="feature-card animate-in">
+                <div class="feature-icon"><span>⚡</span></div>
+                <h3>Instant Processing</h3>
+                <p>Quick admin approval and instant PDF generation for a hassle-free experience.</p>
+            </div>
+            <div class="feature-card animate-in">
+                <div class="feature-icon"><span>🔄</span></div>
+                <h3>Easy Renewal</h3>
+                <p>Renew expired passes with just one click — no need to re-enter your details.</p>
+            </div>
+            <div class="feature-card animate-in">
+                <div class="feature-icon"><span>📊</span></div>
+                <h3>Status Tracking</h3>
+                <p>Track your application status in real-time from your personal dashboard.</p>
+            </div>
+            <div class="feature-card animate-in">
+                <div class="feature-icon"><span>🎧</span></div>
+                <h3>24/7 Support</h3>
+                <p>Submit support tickets and get help whenever you need it through our help center.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ===== CTA ===== -->
+<section class="section"
+    style="background: linear-gradient(135deg, var(--primary-dark), var(--primary)); color: white; text-align: center;">
+    <div class="container">
+        <h2 style="font-size: 2.2rem; font-weight: 800; margin-bottom: 16px; letter-spacing: -1px;">Ready to Get Your
+            Digital Bus Pass?</h2>
+        <p style="opacity: 0.9; font-size: 1.1rem; max-width: 500px; margin: 0 auto 32px;">Join thousands of commuters
+            who manage their bus passes digitally.</p>
+        <div class="btn-group" style="justify-content: center;">
+            {% if current_user %}
+            <a href="{{ url_for('apply_pass') }}" class="btn btn-lg"
+                style="background: white; color: var(--primary-dark); font-weight: 700;">Apply for Pass →</a>
+            {% else %}
+            <a href="{{ url_for('register') }}" class="btn btn-lg"
+                style="background: white; color: var(--primary-dark); font-weight: 700;">Create Account →</a>
+            <a href="{{ url_for('login') }}" class="btn btn-outline btn-lg">Login</a>
+            {% endif %}
+        </div>
+    </div>
+</section>
+{% endblock %}

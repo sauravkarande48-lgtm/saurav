@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Support{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>🎧 Submit Support Ticket</h1>
+    <p>Describe your issue and we'll get back to you</p>
+</div>
+
+<section class="section">
+    <div class="container">
+        <div class="form-card animate-in" style="max-width: 580px;">
+            <div class="form-card-header">
+                <h2>📩 New Support Ticket</h2>
+                <p>Fill in the details below</p>
+            </div>
+            <div class="form-card-body">
+                <form method="POST" action="{{ url_for('support') }}" data-validate>
+                    <div class="form-group">
+                        <label for="support-name">Full Name</label>
+                        <input type="text" class="form-control" id="support-name" name="name" 
+                               value="{{ current_user.name if current_user else '' }}" required placeholder="Your full name">
+                    </div>
+                    <div class="form-group">
+                        <label for="support-email">Email Address</label>
+                        <input type="email" class="form-control" id="support-email" name="email" 
+                               value="{{ current_user.email if current_user else '' }}" required placeholder="your@email.com">
+                    </div>
+                    <div class="form-group">
+                        <label for="support-subject">Subject</label>
+                        <input type="text" class="form-control" id="support-subject" name="subject" required placeholder="Brief description of your issue">
+                    </div>
+                    <div class="form-group">
+                        <label for="support-message">Message</label>
+                        <textarea class="form-control" id="support-message" name="message" required placeholder="Describe your issue in detail..."></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-lg" style="width: 100%;">Submit Ticket →</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

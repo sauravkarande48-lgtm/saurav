@@ -1,0 +1,202 @@
+{% extends "base.html" %}
+{% block title %}Payment{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>💳 Secure Checkout</h1>
+    <p>Complete your payment to activate your bus pass via Razorpay</p>
+</div>
+
+<section class="section">
+    <div class="container">
+        <div class="grid-2" style="gap: 40px; align-items: start; max-width: 900px; margin: 0 auto;">
+
+            <!-- Payment Action -->
+            <div class="card animate-in">
+                <div class="card-header">🔒 Razorpay Payment</div>
+                <div class="card-body" style="text-align: center; padding: 40px 20px;">
+                    <div style="margin-bottom: 30px;">
+                        <img src="https://razorpay.com/assets/razorpay-glyph.svg" alt="Razorpay" style="width: 80px; margin-bottom: 15px; opacity: 0.8;">
+                        <h3 style="margin-bottom: 10px;">Ready to Pay?</h3>
+                        <p style="color: var(--text-muted); font-size: 0.9rem;">You will be redirected to a secure payment popup.</p>
+                    </div>
+
+                    <div style="background: var(--primary-bg); padding: 20px; border-radius: var(--radius); margin-bottom: 30px; border: 1px solid var(--primary-border);">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span style="font-weight: 600; color: var(--primary);">Amount Payable:</span>
+                            <span style="font-size: 1.8rem; font-weight: 800; color: var(--primary);">₹{{ "%.0f"|format(bus_pass.price) }}</span>
+                        </div>
+                    </div>
+
+                    <button id="rzp-button" class="btn btn-primary btn-lg" style="width: 100%; height: 60px; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; gap: 10px;">
+                        <span>Pay Securely with Razorpay</span>
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                    </button>
+
+                    <div id="payment-status" style="margin-top: 20px; display: none;">
+                        <div class="alert alert-info" id="status-message">Processing...</div>
+                    </div>
+
+                    <p style="text-align: center; margin-top: 20px; font-size: 0.8rem; color: var(--text-muted);">
+                        🔒 Secured by Razorpay. 256-bit SSL Encryption.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Order Summary -->
+            <div class="card animate-in">
+                <div class="card-header">📋 Order Summary</div>
+                <div class="card-body">
+                    <div class="pass-detail-row">
+                        <span class="pass-detail-label">Passenger</span>
+                        <span class="pass-detail-value">{{ bus_pass.full_name }}</span>
+                    </div>
+                    <div class="pass-detail-row">
+                        <span class="pass-detail-label">Route</span>
+                        <span class="pass-detail-value">{{ bus_pass.route_from }} → {{ bus_pass.route_to }}</span>
+                    </div>
+                    <div class="pass-detail-row">
+                        <span class="pass-detail-label">Pass Type</span>
+                        <span class="pass-detail-value">
+                            {% if bus_pass.pass_type == 'weekly' %}Weekly (7 days){% elif bus_pass.pass_type == 'monthly' %}Monthly (30 days){% elif bus_pass.pass_type == '3months' %}3-Month (90 days){% elif bus_pass.pass_type == '6months' %}6-Month (180 days){% elif bus_pass.pass_type == 'student' %}Student (30 days){% elif bus_pass.pass_type == 'senior' %}Senior Citizen (30 days){% else %}{{ bus_pass.pass_type }}{% endif %}
+                        </span>
+                    </div>
+                    <div class="pass-detail-row">
+                        <span class="pass-detail-label">Pass ID</span>
+                        <span class="pass-detail-value">#{{ bus_pass.id }}</span>
+                    </div>
+                    <div class="pass-detail-row">
+                        <span class="pass-detail-label">Status</span>
+                        <span class="badge badge-approved" id="pass-status">{{ bus_pass.status }}</span>
+                    </div>
+
+                    <hr style="border: none; border-top: 2px solid var(--border); margin: 20px 0;">
+
+                    <div class="pass-detail-row">
+                        <span class="pass-detail-label" style="font-weight: 700;">Total</span>
+                        <span class="pass-detail-value" style="font-size: 1.3rem; color: var(--primary);">₹{{ "%.0f"|format(bus_pass.price) }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Razorpay Checkout Script -->
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
+<script>
+    const payBtn = document.getElementById('rzp-button');
+    const statusDiv = document.getElementById('payment-status');
+    const statusMsg = document.getElementById('status-message');
+    const passId = "{{ bus_pass.id }}";
+
+    payBtn.onclick = async function (e) {
+        payBtn.disabled = true;
+        payBtn.innerHTML = '<span>Initializing...</span>';
+        
+        try {
+            // 1. Create Order on Backend
+            const resp = await fetch(`/api/create_order/${passId}`, { 
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            });
+            const order = await resp.json();
+
+            if (order.error) {
+                showError(order.error);
+                return;
+            }
+
+            // 2. Open Razorpay Checkout
+            const options = {
+                "key": "{{ key_id }}",
+                "amount": order.amount,
+                "currency": "INR",
+                "name": "Smart Bus Pass System",
+                "description": "Payment for Bus Pass #" + passId,
+                "image": "https://cdn-icons-png.flaticon.com/512/3448/3448339.png",
+                "order_id": order.id,
+                "config": {
+                    "display": {
+                        "blocks": {
+                            "upi": {
+                                "name": "UPI/QR",
+                                "instruments": [{ "method": "upi" }]
+                            }
+                        },
+                        "sequence": ["block.upi", "block.cards", "block.netbanking"],
+                        "preferences": { "show_default_blocks": true }
+                    }
+                },
+                "handler": async function (response) {
+                    // 3. Verify Payment on Backend
+                    showLoading('Verifying payment signature...');
+                    
+                    const verifyResp = await fetch('/api/verify_payment', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            razorpay_order_id: response.razorpay_order_id,
+                            razorpay_payment_id: response.razorpay_payment_id,
+                            razorpay_signature: response.razorpay_signature,
+                            pass_id: passId
+                        })
+                    });
+
+                    const result = await verifyResp.json();
+                    if (result.success) {
+                        showSuccess(result.message);
+                        setTimeout(() => {
+                            window.location.href = "{{ url_for('dashboard') }}";
+                        }, 2000);
+                    } else {
+                        showError(result.error || 'Verification failed');
+                    }
+                },
+                "prefill": {
+                    "name": "{{ current_user.name if current_user else '' }}",
+                    "email": "{{ current_user.email if current_user else '' }}",
+                    "contact": "{{ current_user.phone if current_user else '' }}"
+                },
+                "theme": { "color": "#2563EB" },
+                "modal": {
+                    "ondismiss": function() {
+                        payBtn.disabled = false;
+                        payBtn.innerHTML = '<span>Pay Securely with Razorpay</span> <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>';
+                    }
+                }
+            };
+            const rzp = new Razorpay(options);
+            rzp.open();
+
+        } catch (err) {
+            showError('An unexpected error occurred. Please try again.');
+            console.error(err);
+        }
+    }
+
+    function showLoading(msg) {
+        statusDiv.style.display = 'block';
+        statusMsg.className = 'alert alert-info';
+        statusMsg.innerText = msg;
+    }
+
+    function showSuccess(msg) {
+        statusDiv.style.display = 'block';
+        statusMsg.className = 'alert alert-success';
+        statusMsg.innerText = '✅ ' + msg;
+        payBtn.innerHTML = '<span>Payment Successful!</span>';
+        document.getElementById('pass-status').className = 'badge badge-success';
+        document.getElementById('pass-status').innerText = 'Active';
+    }
+
+    function showError(msg) {
+        statusDiv.style.display = 'block';
+        statusMsg.className = 'alert alert-danger';
+        statusMsg.innerText = '❌ ' + msg;
+        payBtn.disabled = false;
+        payBtn.innerHTML = '<span>Retry Payment</span>';
+    }
+</script>
+{% endblock %}

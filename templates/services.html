@@ -1,0 +1,188 @@
+{% extends "base.html" %}
+{% block title %}Services{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Our Services</h1>
+    <p>Choose the right bus pass plan for your commute</p>
+</div>
+
+<section class="section">
+    <div class="container">
+        <div class="section-header">
+            <div class="section-badge">🎫 Pass Types</div>
+            <h2>Bus Pass Plans</h2>
+            <p>Select a plan that best suits your daily commuting needs</p>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px;">
+            <!-- Weekly Pass -->
+            <div class="service-card animate-in">
+                <div class="service-icon"><span>📋</span></div>
+                <h3>Weekly Pass</h3>
+                <p>Ideal for short-term commuters. Valid for 7 days from activation.</p>
+                <div class="service-price">
+                    ₹150 <span>/ week</span>
+                </div>
+                <ul style="text-align: left; list-style: none; margin: 20px 0; font-size: 0.9rem; color: var(--text-light);">
+                    <li style="padding: 6px 0;">✅ Valid for 7 days</li>
+                    <li style="padding: 6px 0;">✅ Unlimited rides on route</li>
+                    <li style="padding: 6px 0;">✅ Digital PDF pass</li>
+                    <li style="padding: 6px 0;">✅ Great for visitors</li>
+                </ul>
+                {% if current_user %}
+                    <a href="{{ url_for('apply_pass') }}" class="btn btn-primary" style="width: 100%;">Apply Now</a>
+                {% else %}
+                    <a href="{{ url_for('register') }}" class="btn btn-primary" style="width: 100%;">Get Started</a>
+                {% endif %}
+            </div>
+
+            <!-- Monthly Pass -->
+            <div class="service-card animate-in">
+                <div class="service-icon"><span>📅</span></div>
+                <h3>Monthly Pass</h3>
+                <p>Perfect for daily commuters. Valid for 30 days from the date of activation.</p>
+                <div class="service-price">
+                    ₹500 <span>/ month</span>
+                </div>
+                <ul style="text-align: left; list-style: none; margin: 20px 0; font-size: 0.9rem; color: var(--text-light);">
+                    <li style="padding: 6px 0;">✅ Valid for 30 days</li>
+                    <li style="padding: 6px 0;">✅ Unlimited rides on route</li>
+                    <li style="padding: 6px 0;">✅ Digital PDF pass</li>
+                    <li style="padding: 6px 0;">✅ Easy renewal</li>
+                </ul>
+                {% if current_user %}
+                    <a href="{{ url_for('apply_pass') }}" class="btn btn-primary" style="width: 100%;">Apply Now</a>
+                {% else %}
+                    <a href="{{ url_for('register') }}" class="btn btn-primary" style="width: 100%;">Get Started</a>
+                {% endif %}
+            </div>
+
+            <!-- 3-Month Pass -->
+            <div class="service-card animate-in" style="border: 2px solid var(--primary); position: relative;">
+                <div style="position: absolute; top: 16px; right: 16px; background: var(--primary); color: white; padding: 4px 12px; border-radius: 50px; font-size: 0.75rem; font-weight: 700;">BEST VALUE</div>
+                <div class="service-icon"><span>📆</span></div>
+                <h3>3-Month Pass</h3>
+                <p>Save more with our quarterly plan. Valid for 90 days with a 10% discount.</p>
+                <div class="service-price">
+                    ₹1,350 <span>/ 3 months</span>
+                </div>
+                <p style="font-size: 0.85rem; color: var(--success); font-weight: 600; margin-bottom: 0;">You save ₹150!</p>
+                <ul style="text-align: left; list-style: none; margin: 20px 0; font-size: 0.9rem; color: var(--text-light);">
+                    <li style="padding: 6px 0;">✅ Valid for 90 days</li>
+                    <li style="padding: 6px 0;">✅ Unlimited rides on route</li>
+                    <li style="padding: 6px 0;">✅ 10% discount applied</li>
+                    <li style="padding: 6px 0;">✅ Priority support</li>
+                </ul>
+                {% if current_user %}
+                    <a href="{{ url_for('apply_pass') }}" class="btn btn-primary" style="width: 100%;">Apply Now</a>
+                {% else %}
+                    <a href="{{ url_for('register') }}" class="btn btn-primary" style="width: 100%;">Get Started</a>
+                {% endif %}
+            </div>
+
+            <!-- 6-Month Pass -->
+            <div class="service-card animate-in">
+                <div class="service-icon"><span>🗓️</span></div>
+                <h3>6-Month Pass</h3>
+                <p>Best for regular commuters. Valid for 180 days with a 10% discount.</p>
+                <div class="service-price">
+                    ₹2,700 <span>/ 6 months</span>
+                </div>
+                <p style="font-size: 0.85rem; color: var(--success); font-weight: 600; margin-bottom: 0;">You save ₹300!</p>
+                <ul style="text-align: left; list-style: none; margin: 20px 0; font-size: 0.9rem; color: var(--text-light);">
+                    <li style="padding: 6px 0;">✅ Valid for 180 days</li>
+                    <li style="padding: 6px 0;">✅ Unlimited rides on route</li>
+                    <li style="padding: 6px 0;">✅ 10% discount applied</li>
+                    <li style="padding: 6px 0;">✅ Priority support</li>
+                </ul>
+                {% if current_user %}
+                    <a href="{{ url_for('apply_pass') }}" class="btn btn-primary" style="width: 100%;">Apply Now</a>
+                {% else %}
+                    <a href="{{ url_for('register') }}" class="btn btn-primary" style="width: 100%;">Get Started</a>
+                {% endif %}
+            </div>
+
+            <!-- Student Pass -->
+            <div class="service-card animate-in" style="border: 2px solid #8B5CF6; position: relative;">
+                <div style="position: absolute; top: 16px; right: 16px; background: #8B5CF6; color: white; padding: 4px 12px; border-radius: 50px; font-size: 0.75rem; font-weight: 700;">STUDENT</div>
+                <div class="service-icon"><span>🎓</span></div>
+                <h3>Student Pass</h3>
+                <p>Reduced price for students. Valid for 30 days. Requires student ID verification.</p>
+                <div class="service-price">
+                    ₹400 <span>/ month</span>
+                </div>
+                <p style="font-size: 0.85rem; color: #8B5CF6; font-weight: 600; margin-bottom: 0;">20% student discount!</p>
+                <ul style="text-align: left; list-style: none; margin: 20px 0; font-size: 0.9rem; color: var(--text-light);">
+                    <li style="padding: 6px 0;">✅ Valid for 30 days</li>
+                    <li style="padding: 6px 0;">✅ Unlimited rides on route</li>
+                    <li style="padding: 6px 0;">✅ Student ID required</li>
+                    <li style="padding: 6px 0;">✅ Digital PDF pass</li>
+                </ul>
+                {% if current_user %}
+                    <a href="{{ url_for('apply_pass') }}" class="btn btn-primary" style="width: 100%;">Apply Now</a>
+                {% else %}
+                    <a href="{{ url_for('register') }}" class="btn btn-primary" style="width: 100%;">Get Started</a>
+                {% endif %}
+            </div>
+
+            <!-- Senior Citizen Pass -->
+            <div class="service-card animate-in" style="border: 2px solid #059669; position: relative;">
+                <div style="position: absolute; top: 16px; right: 16px; background: #059669; color: white; padding: 4px 12px; border-radius: 50px; font-size: 0.75rem; font-weight: 700;">SENIOR</div>
+                <div class="service-icon"><span>👴</span></div>
+                <h3>Senior Citizen Pass</h3>
+                <p>Discounted fare for senior citizens (60+ years). Valid for 30 days.</p>
+                <div class="service-price">
+                    ₹350 <span>/ month</span>
+                </div>
+                <p style="font-size: 0.85rem; color: #059669; font-weight: 600; margin-bottom: 0;">30% senior discount!</p>
+                <ul style="text-align: left; list-style: none; margin: 20px 0; font-size: 0.9rem; color: var(--text-light);">
+                    <li style="padding: 6px 0;">✅ Valid for 30 days</li>
+                    <li style="padding: 6px 0;">✅ Unlimited rides on route</li>
+                    <li style="padding: 6px 0;">✅ Age proof required</li>
+                    <li style="padding: 6px 0;">✅ Digital PDF pass</li>
+                </ul>
+                {% if current_user %}
+                    <a href="{{ url_for('apply_pass') }}" class="btn btn-primary" style="width: 100%;">Apply Now</a>
+                {% else %}
+                    <a href="{{ url_for('register') }}" class="btn btn-primary" style="width: 100%;">Get Started</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Admin Verification -->
+<section class="section" style="background: white;">
+    <div class="container">
+        <div class="section-header">
+            <div class="section-badge">🛡️ Verification</div>
+            <h2>Admin Verification Process</h2>
+            <p>Every pass application goes through a strict verification process</p>
+        </div>
+
+        <div class="grid-4">
+            <div class="feature-card animate-in">
+                <div class="feature-icon"><span>1️⃣</span></div>
+                <h3>Submit Application</h3>
+                <p>Fill in your personal details, route, and upload documents.</p>
+            </div>
+            <div class="feature-card animate-in">
+                <div class="feature-icon"><span>2️⃣</span></div>
+                <h3>Admin Review</h3>
+                <p>Our admin team verifies your details and uploaded documents.</p>
+            </div>
+            <div class="feature-card animate-in">
+                <div class="feature-icon"><span>3️⃣</span></div>
+                <h3>Approval</h3>
+                <p>Once verified, your application is approved for payment.</p>
+            </div>
+            <div class="feature-card animate-in">
+                <div class="feature-icon"><span>4️⃣</span></div>
+                <h3>Activation</h3>
+                <p>Pay and activate your pass. Download your digital PDF.</p>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

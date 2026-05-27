@@ -1,0 +1,225 @@
+{% extends "base.html" %}
+{% block title %}Help & FAQ{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Help Center</h1>
+    <p>Find answers to common questions or reach out for support</p>
+</div>
+
+<!-- FAQ Section -->
+<section class="section">
+    <div class="container">
+        <div class="section-header">
+            <div class="section-badge">❓ FAQ</div>
+            <h2>Frequently Asked Questions</h2>
+            <p>Quick answers to the most common queries</p>
+        </div>
+
+        <div class="accordion">
+            <div class="accordion-item">
+                <button class="accordion-header">
+                    <span>How do I apply for a bus pass?</span>
+                    <span class="accordion-icon">+</span>
+                </button>
+                <div class="accordion-body">
+                    <div class="accordion-content">
+                        To apply for a bus pass, first <strong>register</strong> an account or <strong>login</strong> if
+                        you already have one.
+                        Then navigate to your <strong>Dashboard</strong> and click on <strong>"Apply for Pass"</strong>.
+                        Fill in your personal details, select your route and pass type, upload a photo and ID proof,
+                        and submit your application. An admin will review and approve your application.
+                    </div>
+                </div>
+            </div>
+
+            <div class="accordion-item">
+                <button class="accordion-header">
+                    <span>How do I renew my bus pass?</span>
+                    <span class="accordion-icon">+</span>
+                </button>
+                <div class="accordion-body">
+                    <div class="accordion-content">
+                        Once your pass has expired, go to your <strong>Dashboard</strong> and find the expired pass.
+                        Click the <strong>"Renew Pass"</strong> button. You can select a new duration (Weekly, Monthly,
+                        3-Month, 6-Month, Student, or Senior Citizen).
+                        A new application will be submitted with your existing details. After admin approval, proceed to
+                        payment to activate your renewed pass.
+                    </div>
+                </div>
+            </div>
+
+            <div class="accordion-item">
+                <button class="accordion-header">
+                    <span>How do I make a payment?</span>
+                    <span class="accordion-icon">+</span>
+                </button>
+                <div class="accordion-body">
+                    <div class="accordion-content">
+                        After your pass application is <strong>approved</strong> by an admin, a <strong>"Proceed to
+                            Payment"</strong> button
+                        will appear on your dashboard. Click it to open the payment form. Enter your card details.
+                        Upon successful payment, your pass will be
+                        <strong>activated</strong> and a PDF will be generated for download.
+                    </div>
+                </div>
+            </div>
+
+            <div class="accordion-item">
+                <button class="accordion-header">
+                    <span>What if my pass application is rejected?</span>
+                    <span class="accordion-icon">+</span>
+                </button>
+                <div class="accordion-body">
+                    <div class="accordion-content">
+                        If your application is rejected, you will see the <strong>"Rejected"</strong> status on your
+                        dashboard.
+                        Common reasons include incomplete details or invalid documents. You can submit a
+                        <strong>new application</strong> with corrected information. If you believe the rejection was in
+                        error,
+                        please contact our support team via the <strong>Support Form</strong> below.
+                    </div>
+                </div>
+            </div>
+
+            <div class="accordion-item">
+                <button class="accordion-header">
+                    <span>What pass types are available?</span>
+                    <span class="accordion-icon">+</span>
+                </button>
+                <div class="accordion-body">
+                    <div class="accordion-content">
+                        We offer the following types of passes:<br>
+                        <strong>• Weekly Pass (₹150):</strong> Valid for 7 days. Ideal for short-term users.<br>
+                        <strong>• Monthly Pass (₹500):</strong> Valid for 30 days from activation.<br>
+                        <strong>• 3-Month Pass (₹1,350):</strong> Valid for 90 days with a 10% discount (saves
+                        ₹150).<br>
+                        <strong>• 6-Month Pass (₹2,700):</strong> Valid for 180 days with a 10% discount (saves
+                        ₹300).<br>
+                        <strong>• Student Pass (₹400):</strong> Valid for 30 days. Requires student ID verification.<br>
+                        <strong>• Senior Citizen Pass (₹350):</strong> Valid for 30 days. For passengers aged 60+.<br>
+                        All passes include unlimited rides on your selected route and come as a digital PDF.
+                    </div>
+                </div>
+            </div>
+
+            <div class="accordion-item">
+                <button class="accordion-header">
+                    <span>How do I download my bus pass?</span>
+                    <span class="accordion-icon">+</span>
+                </button>
+                <div class="accordion-body">
+                    <div class="accordion-content">
+                        After successful payment, your digital bus pass is automatically generated as a PDF.
+                        Go to your <strong>Dashboard</strong>, find your active pass, and click the
+                        <strong>"Download Pass"</strong> button. The PDF includes your name, route, validity dates,
+                        photo (if uploaded), and pass ID.
+                    </div>
+                </div>
+            </div>
+            <div class="accordion-item">
+                <button class="accordion-header">
+                    <span>How long does it take to get my bus pass approved?</span>
+                    <span class="accordion-icon">+</span>
+                </button>
+                <div class="accordion-body">
+                    <div class="accordion-content">
+                        Once you submit your application, it is reviewed by our admin team. Typically, applications are
+                        processed within <strong>24 to 48 hours</strong> during working days. You will see the updated
+                        status (Approved or Rejected) on your <strong>Dashboard</strong>. After approval, you can
+                        proceed to payment and activate your pass immediately.
+                    </div>
+                </div>
+            </div>
+
+            <div class="accordion-item">
+                <button class="accordion-header">
+                    <span>What documents are required for a bus pass?</span>
+                    <span class="accordion-icon">+</span>
+                </button>
+                <div class="accordion-body">
+                    <div class="accordion-content">
+                        The following documents may be required during application:<br>
+                        <strong>• Photo:</strong> A recent passport-size photograph (JPG or PNG format).<br>
+                        <strong>• ID Proof:</strong> Any valid government-issued ID such as Aadhar Card, PAN Card, Voter
+                        ID, or Driving License.<br>
+                        <strong>• Student ID:</strong> Required if applying for a Student Pass — upload your
+                        college/school ID card.<br>
+                        <strong>• Age Proof:</strong> Required for Senior Citizen Pass — any document showing date of
+                        birth.<br>
+                        Photo and ID uploads are optional during application but recommended for faster approval.
+                    </div>
+                </div>
+            </div>
+
+            <div class="accordion-item">
+                <button class="accordion-header">
+                    <span>Can I apply for multiple bus passes?</span>
+                    <span class="accordion-icon">+</span>
+                </button>
+                <div class="accordion-body">
+                    <div class="accordion-content">
+                        Yes! You can apply for <strong>multiple bus passes</strong> for different routes or durations.
+                        Each application is processed independently. For example, you can have a Monthly Pass for your
+                        daily commute (e.g., Dadar → Andheri) and a Weekly Pass for occasional travel on a different
+                        route. All your passes are managed from your <strong>Dashboard</strong>, where you can track
+                        their status, make payments, and download pass PDFs.
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+<!-- Support Form -->
+<section class="section" style="background: white;">
+    <div class="container">
+        <div class="section-header">
+            <div class="section-badge">🎧 Support</div>
+            <h2>Need More Help?</h2>
+            <p>Submit a support ticket and we'll get back to you</p>
+        </div>
+
+        <div class="form-card">
+            <div class="form-card-header">
+                <h2>📩 Support Form</h2>
+                <p>Describe your issue and we'll assist you</p>
+            </div>
+            <div class="form-card-body">
+                {% if current_user %}
+                <form method="POST" action="{{ url_for('support') }}" data-validate>
+                    <div class="form-group">
+                        <label for="name">Full Name</label>
+                        <input type="text" class="form-control" id="name" name="name" value="{{ current_user.name }}"
+                            required placeholder="Your full name">
+                    </div>
+                    <div class="form-group">
+                        <label for="email">Email Address</label>
+                        <input type="email" class="form-control" id="email" name="email"
+                            value="{{ current_user.email }}" required placeholder="your@email.com">
+                    </div>
+                    <div class="form-group">
+                        <label for="subject">Subject</label>
+                        <input type="text" class="form-control" id="subject" name="subject" required
+                            placeholder="Brief description of your issue">
+                    </div>
+                    <div class="form-group">
+                        <label for="message">Message</label>
+                        <textarea class="form-control" id="message" name="message" required
+                            placeholder="Describe your issue in detail..."></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="width: 100%;">Submit Ticket</button>
+                </form>
+                {% else %}
+                <div class="text-center" style="padding: 32px;">
+                    <p style="margin-bottom: 16px; color: var(--text-light);">Please log in to submit a support ticket.
+                    </p>
+                    <a href="{{ url_for('login') }}" class="btn btn-primary">Login to Continue</a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}About Us{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>About Us</h1>
+    <p>Learn about our mission and the team behind Smart Bus Pass System</p>
+</div>
+
+<section class="section">
+    <div class="container">
+        <div class="about-grid animate-in">
+            <div>
+                <div class="section-badge">🏢 Our Story</div>
+                <h2
+                    style="font-size: 2rem; font-weight: 800; margin-bottom: 16px; color: var(--text-dark); letter-spacing: -0.5px;">
+                    Simplifying Public Transit</h2>
+                <p style="color: var(--text-light); line-height: 1.8; margin-bottom: 16px;">
+                    The Smart Bus Pass Management System is a modern digital solution designed to simplify and enhance
+                    the process of obtaining and managing bus passes. Our platform eliminates the need for long queues,
+                    manual paperwork, and time-consuming procedures by providing a seamless online experience for
+                    commuters.
+                </p>
+                <p style="color: var(--text-light); line-height: 1.8; margin-bottom: 16px;">
+                    This system allows users to apply for monthly, quarterly, or custom-duration bus passes, make secure
+                    online payments, and receive digital passes instantly. By integrating user-friendly design with
+                    efficient backend processing, the platform ensures a smooth and hassle-free experience for both
+                    users and administrators.
+                </p>
+                <p style="color: var(--text-light); line-height: 1.8; margin-bottom: 16px;">
+                    Our system not only benefits commuters by saving time and effort but also helps administrators
+                    manage applications, approvals, and records efficiently through a centralized dashboard.
+                </p>
+                <p style="color: var(--text-light); line-height: 1.8;">
+
+                </p>
+            </div>
+            <div class="about-image">
+                <img src="{{ url_for('static', filename='about_bus.jpg') }}" alt="Our Bus Fleet">
+            </div>
+        </div>
+
+        <!-- Mission & Vision -->
+        <div class="mission-vision animate-in">
+            <div class="mv-card">
+                <h3>🎯 Our Mission</h3>
+                <p>To provide a seamless, secure, and user-friendly digital platform for bus pass management that
+                    reduces paperwork, saves time, and enhances the overall transit experience for commuters across the
+                    city.</p>
+            </div>
+            <div class="mv-card">
+                <h3>🔭 Our Vision</h3>
+                <p>To become the leading digital transit management solution, enabling smart cities to offer efficient,
+                    transparent, and accessible public transportation pass services to every citizen.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+{% endblock %}

@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+{% block title %}Application Details - #{{ p.id }}{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <div class="dashboard-header-inner">
+        <div>
+            <a href="{{ url_for('admin_dashboard') }}"
+                style="color: white; text-decoration: none; font-size: 0.9rem; display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                ⬅️ Back to Dashboard
+            </a>
+            <h1>🎫 Application Details #{{ p.id }}</h1>
+            <p>Verification of pass application for {{ p.full_name }}</p>
+        </div>
+        <div>
+            <span class="badge badge-{{ p.status|lower }}">{{ p.status }}</span>
+        </div>
+    </div>
+</div>
+
+<div class="dashboard-body">
+    <div class="grid-2" style="gap: 30px; align-items: start;">
+
+        <!-- Left: Passenger Info -->
+        <div class="card animate-in">
+            <div class="card-header">👤 Passenger Information</div>
+            <div class="card-body">
+                <div class="pass-detail-row">
+                    <span class="pass-detail-label">Full Name</span>
+                    <span class="pass-detail-value">{{ p.full_name }}</span>
+                </div>
+                <div class="pass-detail-row">
+                    <span class="pass-detail-label">Age / Gender</span>
+                    <span class="pass-detail-value">{{ p.age }} years / {{ p.gender }}</span>
+                </div>
+                <div class="pass-detail-row">
+                    <span class="pass-detail-label">Route</span>
+                    <span class="pass-detail-value">📍 {{ p.route_from }} → {{ p.route_to }}</span>
+                </div>
+                <div class="pass-detail-row">
+                    <span class="pass-detail-label">Pass Type</span>
+                    <span class="pass-detail-value">
+                        {% if p.pass_type == 'weekly' %}Weekly (7 days){% elif p.pass_type == 'monthly' %}Monthly (30
+                        days){% elif p.pass_type == '3months' %}3-Month (90 days){% elif p.pass_type == '6months'
+                        %}6-Month (180 days){% elif p.pass_type == 'student' %}Student (30 days){% elif p.pass_type ==
+                        'senior' %}Senior Citizen (30 days){% else %}{{ p.pass_type }}{% endif %}
+                    </span>
+                </div>
+                <div class="pass-detail-row">
+                    <span class="pass-detail-label">Price</span>
+                    <span class="pass-detail-value" style="color: var(--primary); font-weight: 700;">₹{{
+                        "%.0f"|format(p.price) }}</span>
+                </div>
+                <div class="pass-detail-row">
+                    <span class="pass-detail-label">Applied By</span>
+                    <span class="pass-detail-value">{{ p.user_name }} ({{ p.user_email }})</span>
+                </div>
+
+                {% if p.status == 'Pending' %}
+                <div
+                    style="margin-top: 30px; padding-top: 20px; border-top: 1px solid var(--border); display: flex; gap: 15px;">
+                    <a href="{{ url_for('admin_approve', pass_id=p.id) }}" class="btn btn-success" style="flex: 1;"
+                        data-confirm data-confirm-title="Approve Application?"
+                        data-confirm-message="Are you sure you want to approve this pass application for {{ p.full_name }}?"
+                        data-confirm-icon="✅" data-confirm-text="Yes, Approve" data-confirm-theme="success">✓
+                        Approve</a>
+                    <a href="{{ url_for('admin_reject', pass_id=p.id) }}" class="btn btn-danger" style="flex: 1;"
+                        data-confirm data-confirm-title="Reject Application?"
+                        data-confirm-message="Are you sure you want to reject this pass application for {{ p.full_name }}?"
+                        data-confirm-icon="✕" data-confirm-text="Yes, Reject" data-confirm-theme="danger">✕ Reject</a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Right: Proofs & Photo -->
+        <div class="card animate-in" style="animation-delay: 100ms;">
+            <div class="card-header">📂 Verification Documents</div>
+            <div class="card-body">
+                <div class="grid-2" style="gap: 20px;">
+                    <!-- User Photo -->
+                    <div>
+                        <label
+                            style="display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 8px;">Passenger
+                            Photo</label>
+                        {% if p.photo %}
+                        <div
+                            style="width: 100%; aspect-ratio: 4/5; border-radius: var(--radius); overflow: hidden; border: 1px solid var(--border);">
+                            <img src="{{ url_for('static', filename='uploads/' + p.photo) }}"
+                                style="width: 100%; height: 100%; object-fit: cover;">
+                        </div>
+                        <a href="{{ url_for('static', filename='uploads/' + p.photo) }}" target="_blank"
+                            class="btn btn-outline btn-sm" style="width: 100%; margin-top: 10px;">🔍 View Full Photo</a>
+                        {% else %}
+                        <div
+                            style="padding: 40px; text-align: center; border: 1px dashed var(--border); border-radius: var(--radius); color: var(--text-muted);">
+                            No photo uploaded</div>
+                        {% endif %}
+                    </div>
+
+                    <!-- ID Proof -->
+                    <div>
+                        <label
+                            style="display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 8px;">ID
+                            Proof Document</label>
+                        {% if p.id_proof %}
+                        <div
+                            style="width: 100%; aspect-ratio: 4/5; border-radius: var(--radius); overflow: hidden; border: 1px solid var(--border); background: #f1f5f9; display: flex; align-items: center; justify-content: center;">
+                            {% if p.id_proof.endswith('.pdf') %}
+                            <div style="text-align: center;">
+                                <span style="font-size: 3rem;">📄</span>
+                                <div style="font-size: 0.8rem; margin-top: 8px;">PDF Document</div>
+                            </div>
+                            {% else %}
+                            <img src="{{ url_for('static', filename='uploads/' + p.id_proof) }}"
+                                style="width: 100%; height: 100%; object-fit: cover;">
+                            {% endif %}
+                        </div>
+                        <a href="{{ url_for('static', filename='uploads/' + p.id_proof) }}" target="_blank"
+                            class="btn btn-outline btn-sm" style="width: 100%; margin-top: 10px;">🔍 View Original
+                            ID</a>
+                        {% else %}
+                        <div
+                            style="padding: 40px; text-align: center; border: 1px dashed var(--border); border-radius: var(--radius); color: var(--text-muted);">
+                            No ID proof uploaded</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}
