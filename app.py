@@ -1384,9 +1384,11 @@ def server_error(e):
 #  APP ENTRY POINT
 # =========================================================================
 
+# Always initialize DB (needed for gunicorn/Render deployment)
+with app.app_context():
+    init_db()
+
 if __name__ == '__main__':
-    with app.app_context():
-        init_db()
     print("=" * 50)
     print("  Smart Bus Pass Management System")
     print("  Running at http://127.0.0.1:5000")
