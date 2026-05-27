@@ -1275,10 +1275,9 @@ def api_create_order(pass_id):
         order = client.order.create(data=data)
         
         # Store order info in DB
-        # Note: we provide payment_ref for backward compatibility with existing not-null constraint
         db.execute(
-            "INSERT INTO payments (pass_id, user_id, amount, order_id, payment_ref, status) VALUES (?, ?, ?, ?, ?, ?)",
-            (pass_id, session['user_id'], bus_pass['price'], order['id'], order['id'], 'pending')
+            "INSERT INTO payments (pass_id, user_id, amount, order_id, status) VALUES (?, ?, ?, ?, ?)",
+            (pass_id, session['user_id'], bus_pass['price'], order['id'], 'pending')
         )
         db.commit()
         
