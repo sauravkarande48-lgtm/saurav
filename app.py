@@ -518,7 +518,7 @@ def generate_pass_pdf(pass_data, user_name):
         
         # Convert to ReportLab-friendly image
         qr_io = io.BytesIO()
-        img_qr.save(qr_io, format='PNG')
+        img_qr.save(qr_io)
         qr_io.seek(0)
         qr_reader = ImageReader(qr_io)
         
