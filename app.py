@@ -643,7 +643,20 @@ def inject_user():
 @app.route('/')
 def home():
     """Landing / Home page."""
-    return render_template('home.html')
+    latest_pass = None
+    if 'user_id' in session:
+        db = get_db()
+        # Try to get the user's active pass first, otherwise get the most recent one
+        latest_pass = db.execute(
+            "SELECT * FROM passes WHERE user_id = ? AND status = 'Active' ORDER BY created_at DESC LIMIT 1",
+            (session['user_id'],)
+        ).fetchone()
+        if not latest_pass:
+            latest_pass = db.execute(
+                "SELECT * FROM passes WHERE user_id = ? ORDER BY created_at DESC LIMIT 1",
+                (session['user_id'],)
+            ).fetchone()
+    return render_template('home.html', latest_pass=latest_pass)
 
 
 @app.route('/about')
