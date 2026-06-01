@@ -26,17 +26,20 @@
             <div style="display: flex; align-items: center; gap: 24px; margin-top: 28px; flex-wrap: wrap;">
                 <div style="display: flex; align-items: center; gap: 8px;">
                     <span style="font-size: 1.1rem;">✅</span>
-                    <span style="font-size: 0.88rem; color: rgba(255,255,255,0.85); font-weight: 500;">Trusted by Mumbai Commuters</span>
+                    <span style="font-size: 0.88rem; color: rgba(255,255,255,0.85); font-weight: 500;">Trusted by Mumbai
+                        Commuters</span>
                 </div>
                 <span style="color: rgba(255,255,255,0.3); font-size: 0.7rem;">●</span>
                 <div style="display: flex; align-items: center; gap: 8px;">
                     <span style="font-size: 1.1rem;">🎫</span>
-                    <span style="font-size: 0.88rem; color: rgba(255,255,255,0.85); font-weight: 500;">1000+ Passes Generated</span>
+                    <span style="font-size: 0.88rem; color: rgba(255,255,255,0.85); font-weight: 500;">1000+ Passes
+                        Generated</span>
                 </div>
                 <span style="color: rgba(255,255,255,0.3); font-size: 0.7rem;">●</span>
                 <div style="display: flex; align-items: center; gap: 8px;">
                     <span style="font-size: 1.1rem;">🗺️</span>
-                    <span style="font-size: 0.88rem; color: rgba(255,255,255,0.85); font-weight: 500;">40+ Mumbai Routes</span>
+                    <span style="font-size: 0.88rem; color: rgba(255,255,255,0.85); font-weight: 500;">40+ Mumbai
+                        Routes</span>
                 </div>
             </div>
         </div>
@@ -53,35 +56,42 @@
                 <div class="hero-card-body">
                     <div class="hero-card-row">
                         <span>Passenger</span>
-                        <span>{% if current_user and latest_pass %}{{ latest_pass.full_name }}{% elif current_user %}{{ current_user.name }}{% else %}Registered User{% endif %}</span>
+                        <span>{% if current_user and latest_pass %}{{ latest_pass.full_name }}{% elif current_user %}{{
+                            current_user.name }}{% else %}Registered User{% endif %}</span>
                     </div>
                     <div class="hero-card-row">
                         <span>Route</span>
-                        <span>{% if latest_pass %}{{ latest_pass.route_from }} → {{ latest_pass.route_to }}{% else %}Mumbai Local Route{% endif %}</span>
+                        <span>{% if latest_pass %}{{ latest_pass.route_from }} → {{ latest_pass.route_to }}{% else
+                            %}Mumbai Local Route{% endif %}</span>
                     </div>
                     <div class="hero-card-row">
                         <span>Pass Type</span>
-                        <span>{% if latest_pass %}{% if latest_pass.pass_type == 'weekly' %}Weekly{% elif latest_pass.pass_type == 'monthly' %}Monthly{% elif latest_pass.pass_type == '3months' %}3-Month{% elif latest_pass.pass_type == '6months' %}6-Month{% elif latest_pass.pass_type == 'student' %}Student{% elif latest_pass.pass_type == 'senior' %}Senior Citizen{% else %}{{ latest_pass.pass_type }}{% endif %}{% else %}Monthly Pass{% endif %}</span>
+                        <span>{% if latest_pass %}{% if latest_pass.pass_type == 'weekly' %}Weekly{% elif
+                            latest_pass.pass_type == 'monthly' %}Monthly{% elif latest_pass.pass_type == '3months'
+                            %}3-Month{% elif latest_pass.pass_type == '6months' %}6-Month{% elif latest_pass.pass_type
+                            == 'student' %}Student{% elif latest_pass.pass_type == 'senior' %}Senior Citizen{% else %}{{
+                            latest_pass.pass_type }}{% endif %}{% else %}Monthly Pass{% endif %}</span>
                     </div>
                     <div class="hero-card-row">
                         <span>Valid Till</span>
-                        <span>{% if latest_pass and latest_pass.expiry_date %}{{ latest_pass.expiry_date }}{% else %}30 Apr 2026{% endif %}</span>
+                        <span>{% if latest_pass and latest_pass.expiry_date %}{{ latest_pass.expiry_date }}{% else %}30
+                            Apr 2026{% endif %}</span>
                     </div>
                 </div>
                 {% if latest_pass %}
-                    {% if latest_pass.status == 'Active' %}
+                {% if latest_pass.status == 'Active' %}
                 <div class="hero-card-status" style="color: #22c55e;">✦ Active Pass</div>
-                    {% elif latest_pass.status == 'Pending' %}
+                {% elif latest_pass.status == 'Pending' %}
                 <div class="hero-card-status" style="color: #f59e0b;">⏳ Pending Approval</div>
-                    {% elif latest_pass.status == 'Approved' %}
+                {% elif latest_pass.status == 'Approved' %}
                 <div class="hero-card-status" style="color: #3b82f6;">✓ Approved — Pay Now</div>
-                    {% elif latest_pass.status == 'Expired' %}
+                {% elif latest_pass.status == 'Expired' %}
                 <div class="hero-card-status" style="color: #ef4444;">✕ Expired</div>
-                    {% elif latest_pass.status == 'Rejected' %}
+                {% elif latest_pass.status == 'Rejected' %}
                 <div class="hero-card-status" style="color: #ef4444;">✕ Rejected</div>
-                    {% else %}
+                {% else %}
                 <div class="hero-card-status">{{ latest_pass.status }}</div>
-                    {% endif %}
+                {% endif %}
                 {% elif current_user %}
                 <div class="hero-card-status" style="color: #f59e0b;">📋 No Pass Yet — Apply Now!</div>
                 {% else %}
