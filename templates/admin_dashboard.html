@@ -53,6 +53,7 @@
         <button class="tab-btn active" data-tab="tab-passes">🎫 Pass Applications</button>
         <button class="tab-btn" data-tab="tab-users">👥 Users</button>
         <button class="tab-btn" data-tab="tab-payments">💳 Payments</button>
+        <button class="tab-btn" data-tab="tab-logins">🕐 Login History</button>
         <button class="tab-btn" data-tab="tab-tickets">🎧 Support Tickets</button>
         <button class="tab-btn" data-tab="tab-messages">📬 Contact Messages</button>
     </div>
@@ -242,6 +243,56 @@
                     <div class="empty-state-icon">💳</div>
                     <h3>No Payments</h3>
                     <p>No payments have been made yet.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== TAB: Login History ===== -->
+    <div class="tab-content" id="tab-logins">
+        <div class="card">
+            <div class="card-header">🕐 All Login History ({{ login_logs|length }}) — <span style="font-weight: 400; font-size: 0.85rem; color: var(--text-muted);">Permanently stored, never deleted</span></div>
+            <div class="card-body" style="padding: 0;">
+                {% if login_logs %}
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>User Name</th>
+                                <th>Email</th>
+                                <th>Role</th>
+                                <th>Login Time (IST)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for log in login_logs %}
+                            <tr>
+                                <td>{{ log.id }}</td>
+                                <td><strong>{{ log.user_name }}</strong></td>
+                                <td style="font-size: 0.85rem;">{{ log.user_email }}</td>
+                                <td>
+                                    {% if log.user_role == 'admin' %}
+                                    <span class="badge badge-active" style="background: #7c3aed; color: white;">Admin</span>
+                                    {% else %}
+                                    <span class="badge badge-active">User</span>
+                                    {% endif %}
+                                </td>
+                                <td style="font-size: 0.85rem;">
+                                    {{ log.login_at|datetime }}
+                                    <div style="font-size: 0.75rem; color: var(--text-muted);">{{ log.login_at|time_ago }}</div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="empty-state">
+                    <div class="empty-state-icon">🕐</div>
+                    <h3>No Login Records</h3>
+                    <p>Login history will appear here after users log in.</p>
                 </div>
                 {% endif %}
             </div>

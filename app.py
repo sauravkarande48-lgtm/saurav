@@ -2,7 +2,7 @@
 Smart Bus Pass Management System
 ================================
 A full-stack web application for managing bus passes.
-Built with Flask, SQLite, and ReportLab.
+Built with Flask, SQLite/PostgreSQL, and ReportLab.
 
 Run: python app.py
 """
@@ -28,6 +28,15 @@ from werkzeug.utils import secure_filename
 
 # Load environment variables
 load_dotenv()
+
+# ---------------------------------------------------------------------------
+# Database Engine Detection (SQLite local / PostgreSQL on Render)
+# ---------------------------------------------------------------------------
+USE_POSTGRES = bool(os.getenv('DATABASE_URL'))
+
+if USE_POSTGRES:
+    import psycopg2
+    import psycopg2.extras
 
 # ---------------------------------------------------------------------------
 # App Configuration
@@ -197,32 +206,44 @@ def get_distance_multiplier(route_from, route_to):
 # --- Custom Jinja Filters ---
 @app.template_filter('datetime')
 def format_datetime(value, format="%d %b %Y, %I:%M %p"):
+    """Format a datetime value for display. Handles both string (SQLite) and datetime objects (PostgreSQL)."""
     if not value:
         return ""
     try:
-        from datetime import datetime, timedelta
-        # SQLite CURRENT_TIMESTAMP is UTC "YYYY-MM-DD HH:MM:SS"
-        dt = datetime.strptime(value, "%Y-%m-%d %H:%M:%S")
-        # Add IST (+5:30) offset for "Real Timing"
-        ist_dt = dt + timedelta(hours=5, minutes=30)
+        if isinstance(value, str):
+            dt = datetime.strptime(value, "%Y-%m-%d %H:%M:%S")
+        elif isinstance(value, datetime):
+            dt = value
+        else:
+            return str(value)
+        # Add IST (+5:30) offset (CURRENT_TIMESTAMP is UTC)
+        if dt.tzinfo is None:
+            ist_dt = dt + timedelta(hours=5, minutes=30)
+        else:
+            ist_dt = dt
         return ist_dt.strftime(format)
     except Exception:
-        return value
+        return str(value)
 
 @app.template_filter('time_ago')
 def time_ago(value):
+    """Show relative time. Handles both string (SQLite) and datetime objects (PostgreSQL)."""
     if not value:
         return ""
     try:
-        from datetime import datetime, timedelta
-        # SQLite CURRENT_TIMESTAMP is UTC
-        dt = datetime.strptime(value, "%Y-%m-%d %H:%M:%S")
+        if isinstance(value, str):
+            dt = datetime.strptime(value, "%Y-%m-%d %H:%M:%S")
+        elif isinstance(value, datetime):
+            dt = value
+        else:
+            return str(value)
         # Add IST (+5:30) offset
-        dt = dt + timedelta(hours=5, minutes=30)
-        
+        if dt.tzinfo is None:
+            dt = dt + timedelta(hours=5, minutes=30)
+
         now = datetime.now()
         diff = now - dt
-        
+
         seconds = diff.total_seconds()
         if seconds < 60:
             return "Just now"
@@ -236,14 +257,86 @@ def time_ago(value):
             return f"{diff.days} days ago"
         return dt.strftime("%d %b")
     except Exception:
-        return value
+        return str(value)
+
+
+# ---------------------------------------------------------------------------
+# PostgreSQL Compatibility Layer
+# ---------------------------------------------------------------------------
+
+class CompatRow(dict):
+    """A dict subclass that also supports integer-index access like sqlite3.Row.
+    This lets code use row['column'], row[0], and dict(row) interchangeably."""
+    def __init__(self, keys, values):
+        super().__init__(zip(keys, values))
+        self._values = list(values)
+
+    def __getitem__(self, key):
+        if isinstance(key, int):
+            return self._values[key]
+        return super().__getitem__(key)
+
+    def keys(self):
+        return super().keys()
+
+
+class _CompatCursor:
+    """Wraps a raw psycopg2 cursor to return CompatRow objects."""
+    def __init__(self, cursor):
+        self._cur = cursor
+
+    def fetchone(self):
+        row = self._cur.fetchone()
+        if row is None:
+            return None
+        keys = [desc[0] for desc in self._cur.description]
+        return CompatRow(keys, row)
+
+    def fetchall(self):
+        rows = self._cur.fetchall()
+        if not rows:
+            return []
+        keys = [desc[0] for desc in self._cur.description]
+        return [CompatRow(keys, row) for row in rows]
+
+
+class PostgresDBWrapper:
+    """Wraps a psycopg2 connection so it behaves like a sqlite3 connection.
+    Converts ? placeholders to %s and returns CompatRow objects."""
+
+    def __init__(self, conn):
+        self._conn = conn
+
+    def execute(self, sql, params=None):
+        sql = sql.replace('?', '%s')
+        cur = self._conn.cursor()
+        cur.execute(sql, params or ())
+        return _CompatCursor(cur)
+
+    def commit(self):
+        self._conn.commit()
+
+    def rollback(self):
+        self._conn.rollback()
+
+    def close(self):
+        self._conn.close()
+
+
+# ---------------------------------------------------------------------------
+# Connection Management
+# ---------------------------------------------------------------------------
 
 def get_db():
-    """Open a database connection and attach it to the request context."""
+    """Open a database connection (SQLite locally, PostgreSQL on Render)."""
     if 'db' not in g:
-        g.db = sqlite3.connect(app.config['DATABASE'])
-        g.db.row_factory = sqlite3.Row
-        g.db.execute("PRAGMA foreign_keys = ON")
+        if USE_POSTGRES:
+            conn = psycopg2.connect(os.getenv('DATABASE_URL'))
+            g.db = PostgresDBWrapper(conn)
+        else:
+            g.db = sqlite3.connect(app.config['DATABASE'])
+            g.db.row_factory = sqlite3.Row
+            g.db.execute("PRAGMA foreign_keys = ON")
     return g.db
 
 
@@ -252,118 +345,221 @@ def close_db(exception):
     """Close database connection at end of request."""
     db = g.pop('db', None)
     if db is not None:
+        if USE_POSTGRES and exception:
+            db.rollback()
         db.close()
+
+
+# ---------------------------------------------------------------------------
+# Schema Definitions
+# ---------------------------------------------------------------------------
+
+# PostgreSQL schema (uses SERIAL instead of AUTOINCREMENT)
+_PG_SCHEMA = [
+    '''CREATE TABLE IF NOT EXISTS users (
+        id SERIAL PRIMARY KEY,
+        name TEXT NOT NULL,
+        email TEXT UNIQUE NOT NULL,
+        phone TEXT,
+        password_hash TEXT NOT NULL,
+        role TEXT NOT NULL DEFAULT 'user',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )''',
+    '''CREATE TABLE IF NOT EXISTS passes (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL REFERENCES users(id),
+        full_name TEXT NOT NULL,
+        age INTEGER NOT NULL,
+        gender TEXT NOT NULL,
+        route_from TEXT NOT NULL,
+        route_to TEXT NOT NULL,
+        pass_type TEXT NOT NULL,
+        price REAL NOT NULL,
+        status TEXT NOT NULL DEFAULT 'Pending',
+        issue_date TEXT,
+        expiry_date TEXT,
+        photo TEXT,
+        id_proof TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )''',
+    '''CREATE TABLE IF NOT EXISTS payments (
+        id SERIAL PRIMARY KEY,
+        pass_id INTEGER NOT NULL REFERENCES passes(id),
+        user_id INTEGER NOT NULL REFERENCES users(id),
+        amount REAL NOT NULL,
+        order_id TEXT,
+        razorpay_payment_id TEXT,
+        signature TEXT,
+        status TEXT NOT NULL DEFAULT 'pending',
+        paid_at TIMESTAMP,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )''',
+    '''CREATE TABLE IF NOT EXISTS support_tickets (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER REFERENCES users(id),
+        name TEXT NOT NULL,
+        email TEXT NOT NULL,
+        subject TEXT NOT NULL,
+        message TEXT NOT NULL,
+        admin_response TEXT,
+        status TEXT NOT NULL DEFAULT 'Pending',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )''',
+    '''CREATE TABLE IF NOT EXISTS notifications (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL REFERENCES users(id),
+        message TEXT NOT NULL,
+        is_read INTEGER DEFAULT 0,
+        type TEXT DEFAULT 'info',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )''',
+    '''CREATE TABLE IF NOT EXISTS contact_messages (
+        id SERIAL PRIMARY KEY,
+        name TEXT NOT NULL,
+        email TEXT NOT NULL,
+        message TEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )''',
+    '''CREATE TABLE IF NOT EXISTS login_logs (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL REFERENCES users(id),
+        user_name TEXT NOT NULL,
+        user_email TEXT NOT NULL,
+        user_role TEXT NOT NULL DEFAULT 'user',
+        login_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )''',
+]
+
+# SQLite schema (uses INTEGER PRIMARY KEY AUTOINCREMENT)
+_SQLITE_SCHEMA = '''
+    CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        email TEXT UNIQUE NOT NULL,
+        phone TEXT,
+        password_hash TEXT NOT NULL,
+        role TEXT NOT NULL DEFAULT 'user',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+    CREATE TABLE IF NOT EXISTS passes (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        full_name TEXT NOT NULL,
+        age INTEGER NOT NULL,
+        gender TEXT NOT NULL,
+        route_from TEXT NOT NULL,
+        route_to TEXT NOT NULL,
+        pass_type TEXT NOT NULL,
+        price REAL NOT NULL,
+        status TEXT NOT NULL DEFAULT 'Pending',
+        issue_date TEXT,
+        expiry_date TEXT,
+        photo TEXT,
+        id_proof TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(id)
+    );
+    CREATE TABLE IF NOT EXISTS payments (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        pass_id INTEGER NOT NULL,
+        user_id INTEGER NOT NULL,
+        amount REAL NOT NULL,
+        order_id TEXT,
+        razorpay_payment_id TEXT,
+        signature TEXT,
+        status TEXT NOT NULL DEFAULT 'pending',
+        paid_at TIMESTAMP,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (pass_id) REFERENCES passes(id),
+        FOREIGN KEY (user_id) REFERENCES users(id)
+    );
+    CREATE TABLE IF NOT EXISTS support_tickets (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER,
+        name TEXT NOT NULL,
+        email TEXT NOT NULL,
+        subject TEXT NOT NULL,
+        message TEXT NOT NULL,
+        admin_response TEXT,
+        status TEXT NOT NULL DEFAULT 'Pending',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(id)
+    );
+    CREATE TABLE IF NOT EXISTS notifications (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        message TEXT NOT NULL,
+        is_read INTEGER DEFAULT 0,
+        type TEXT DEFAULT 'info',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(id)
+    );
+    CREATE TABLE IF NOT EXISTS contact_messages (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        email TEXT NOT NULL,
+        message TEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+    CREATE TABLE IF NOT EXISTS login_logs (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        user_name TEXT NOT NULL,
+        user_email TEXT NOT NULL,
+        user_role TEXT NOT NULL DEFAULT 'user',
+        login_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(id)
+    );
+'''
 
 
 def init_db():
     """Create tables if they don't exist and seed admin user."""
     db = get_db()
-    db.executescript('''
-        CREATE TABLE IF NOT EXISTS users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT NOT NULL,
-            email TEXT UNIQUE NOT NULL,
-            phone TEXT,
-            password_hash TEXT NOT NULL,
-            role TEXT NOT NULL DEFAULT 'user',
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        );
 
-        CREATE TABLE IF NOT EXISTS passes (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id INTEGER NOT NULL,
-            full_name TEXT NOT NULL,
-            age INTEGER NOT NULL,
-            gender TEXT NOT NULL,
-            route_from TEXT NOT NULL,
-            route_to TEXT NOT NULL,
-            pass_type TEXT NOT NULL,
-            price REAL NOT NULL,
-            status TEXT NOT NULL DEFAULT 'Pending',
-            issue_date TEXT,
-            expiry_date TEXT,
-            photo TEXT,
-            id_proof TEXT,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (user_id) REFERENCES users(id)
-        );
+    if USE_POSTGRES:
+        # PostgreSQL: execute each CREATE TABLE individually
+        for stmt in _PG_SCHEMA:
+            db.execute(stmt)
+        db.commit()
 
-        CREATE TABLE IF NOT EXISTS payments (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            pass_id INTEGER NOT NULL,
-            user_id INTEGER NOT NULL,
-            amount REAL NOT NULL,
-            order_id TEXT NOT NULL,
-            razorpay_payment_id TEXT,
-            signature TEXT,
-            status TEXT NOT NULL DEFAULT 'pending',
-            paid_at TIMESTAMP,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (pass_id) REFERENCES passes(id),
-            FOREIGN KEY (user_id) REFERENCES users(id)
-        );
+        # Migrations: PostgreSQL supports ADD COLUMN IF NOT EXISTS
+        pg_migrations = [
+            "ALTER TABLE payments ADD COLUMN IF NOT EXISTS order_id TEXT",
+            "ALTER TABLE payments ADD COLUMN IF NOT EXISTS razorpay_payment_id TEXT",
+            "ALTER TABLE payments ADD COLUMN IF NOT EXISTS signature TEXT",
+            "ALTER TABLE payments ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'pending'",
+            "ALTER TABLE payments ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP",
+            "ALTER TABLE users ADD COLUMN IF NOT EXISTS phone TEXT",
+            "ALTER TABLE support_tickets ADD COLUMN IF NOT EXISTS user_id INTEGER",
+            "ALTER TABLE support_tickets ADD COLUMN IF NOT EXISTS admin_response TEXT",
+        ]
+        for migration in pg_migrations:
+            try:
+                db.execute(migration)
+            except Exception:
+                db.rollback()
+        db.commit()
+    else:
+        # SQLite: use executescript for all tables
+        db.executescript(_SQLITE_SCHEMA)
 
-        CREATE TABLE IF NOT EXISTS support_tickets (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id INTEGER,
-            name TEXT NOT NULL,
-            email TEXT NOT NULL,
-            subject TEXT NOT NULL,
-            message TEXT NOT NULL,
-            admin_response TEXT,
-            status TEXT NOT NULL DEFAULT 'Pending',
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (user_id) REFERENCES users(id)
-        );
-
-        CREATE TABLE IF NOT EXISTS notifications (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id INTEGER NOT NULL,
-            message TEXT NOT NULL,
-            is_read INTEGER DEFAULT 0,
-            type TEXT DEFAULT 'info',
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (user_id) REFERENCES users(id)
-        );
-
-        CREATE TABLE IF NOT EXISTS contact_messages (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT NOT NULL,
-            email TEXT NOT NULL,
-            message TEXT NOT NULL,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        );
-    ''')
-
-    # Migrate: add Razorpay columns to payments if they don't exist
-    columns = [
-        ('order_id', 'TEXT'),
-        ('razorpay_payment_id', 'TEXT'),
-        ('signature', 'TEXT'),
-        ('status', 'TEXT DEFAULT "pending"'),
-        ('created_at', 'TIMESTAMP DEFAULT CURRENT_TIMESTAMP')
-    ]
-    for col_name, col_type in columns:
-        try:
-            db.execute(f"ALTER TABLE payments ADD COLUMN {col_name} {col_type}")
-        except Exception:
-            pass # Column already exists
-    
-    # Migrate: add 'phone' column if it doesn't exist
-    try:
-        db.execute("ALTER TABLE users ADD COLUMN phone TEXT")
-    except Exception:
-        pass
-
-    # Migrate: add 'user_id' and 'admin_response' to support_tickets
-    try:
-        db.execute("ALTER TABLE support_tickets ADD COLUMN user_id INTEGER")
-    except Exception:
-        pass
-    try:
-        db.execute("ALTER TABLE support_tickets ADD COLUMN admin_response TEXT")
-    except Exception:
-        pass
+        # Migrations: SQLite uses try/except (no IF NOT EXISTS for columns)
+        migrations = [
+            ("payments", "order_id", "TEXT"),
+            ("payments", "razorpay_payment_id", "TEXT"),
+            ("payments", "signature", "TEXT"),
+            ("payments", "status", 'TEXT DEFAULT "pending"'),
+            ("payments", "created_at", "TIMESTAMP DEFAULT CURRENT_TIMESTAMP"),
+            ("users", "phone", "TEXT"),
+            ("support_tickets", "user_id", "INTEGER"),
+            ("support_tickets", "admin_response", "TEXT"),
+        ]
+        for table, col, col_type in migrations:
+            try:
+                db.execute(f"ALTER TABLE {table} ADD COLUMN {col} {col_type}")
+            except Exception:
+                pass
 
     # Seed default admin if not exists
     admin = db.execute("SELECT id FROM users WHERE email = ?", ('admin@buspass.com',)).fetchone()
@@ -739,6 +935,16 @@ def register():
             (name, email, phone, generate_password_hash(password), 'user')
         )
         db.commit()
+
+        # Log the registration as a permanent record
+        new_user = db.execute("SELECT id FROM users WHERE email = ?", (email,)).fetchone()
+        if new_user:
+            db.execute(
+                "INSERT INTO login_logs (user_id, user_name, user_email, user_role) VALUES (?, ?, ?, ?)",
+                (new_user['id'], name, email, 'user')
+            )
+            db.commit()
+
         flash('Account created successfully! Please login.', 'success')
         return redirect(url_for('login'))
 
@@ -763,6 +969,14 @@ def login():
             session['user_id'] = user['id']
             session['user_name'] = user['name']
             session['role'] = user['role']
+
+            # Permanently log every login event
+            db.execute(
+                "INSERT INTO login_logs (user_id, user_name, user_email, user_role) VALUES (?, ?, ?, ?)",
+                (user['id'], user['name'], user['email'], user['role'])
+            )
+            db.commit()
+
             flash(f'Welcome back, {user["name"]}!', 'success')
 
             if user['role'] == 'admin':
@@ -1065,6 +1279,11 @@ def admin_dashboard():
     ).fetchall()
     tickets = db.execute("SELECT * FROM support_tickets ORDER BY created_at DESC").fetchall()
     messages = db.execute("SELECT * FROM contact_messages ORDER BY created_at DESC").fetchall()
+    
+    # Fetch ALL login logs permanently stored in the database
+    login_logs = db.execute(
+        "SELECT * FROM login_logs ORDER BY login_at DESC"
+    ).fetchall()
 
     # Auto-expire passes
     today = datetime.now().strftime('%Y-%m-%d')
@@ -1087,12 +1306,14 @@ def admin_dashboard():
         'active_passes': sum(1 for p in passes if p['status'] == 'Active'),
         'total_revenue': sum(p['amount'] for p in payments),
         'open_tickets': sum(1 for t in tickets if t['status'] == 'Pending'),
+        'total_logins': len(login_logs),
     }
 
     return render_template(
         'admin_dashboard.html',
         users=users, passes=passes, payments=payments,
-        tickets=tickets, messages=messages, stats=stats
+        tickets=tickets, messages=messages, stats=stats,
+        login_logs=login_logs
     )
 
 
